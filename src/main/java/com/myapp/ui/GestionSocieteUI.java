@@ -16,8 +16,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GestionSocieteUI extends JFrame {
+   private static final Logger log = LoggerFactory.getLogger(GestionSocieteUI.class);
    private JTextField txtNomSociete;
    private JTextField txtAdresse;
    private JTextField txtTelephone;

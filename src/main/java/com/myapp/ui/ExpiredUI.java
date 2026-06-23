@@ -23,8 +23,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExpiredUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(ExpiredUI.class);
     
     public ExpiredUI() {
         this.setTitle("Démo expirée");
@@ -41,7 +45,7 @@ public class ExpiredUI extends JFrame {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to set look and feel", e);
         }
 
         this.initUI();

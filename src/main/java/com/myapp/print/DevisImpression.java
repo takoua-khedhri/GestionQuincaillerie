@@ -18,8 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DevisImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(DevisImpression.class);
 
     private String numeroDevis;
     private String dateDevis;
@@ -123,7 +127,7 @@ public class DevisImpression implements Printable {
             y += 10;
             printFooter(g2d, margin, y, contentWidth, pageFormat);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression du Devis", e);
             throw new PrinterException("Erreur impression Devis: " + e.getMessage());
         }
         return PAGE_EXISTS;
@@ -140,7 +144,7 @@ public class DevisImpression implements Printable {
                 Image img = logoIcon.getImage();
                 g2d.drawImage(img, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du chargement du logo", e); }
         }
         if (!logoPrinted) {
             g2d.setColor(Color.LIGHT_GRAY);

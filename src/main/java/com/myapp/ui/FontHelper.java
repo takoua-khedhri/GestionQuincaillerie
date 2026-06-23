@@ -3,31 +3,30 @@ package com.myapp.ui;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FontHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(FontHelper.class);
     
     private static Font fontAwesome;
 
     // Cette méthode charge la police une seule fois et la renvoie
     public static Font getIconFont(float size) {
         if (fontAwesome == null) {
-            try {
-                // On cherche le fichier dans le dossier qu'on a créé à l'étape 1
-                InputStream is = FontHelper.class.getResourceAsStream("/resources/fonts/fa.otf");
-                
+            try (InputStream is = FontHelper.class.getResourceAsStream("/resources/fonts/fa.otf")) {
                 if (is == null) {
-                    System.err.println("ERREUR : Impossible de trouver src/resources/fonts/fa.otf");
-                    // En cas d'erreur, on renvoie une police standard
+                    log.error("Cannot find font resource /resources/fonts/fa.otf");
                     return new Font("SansSerif", Font.PLAIN, (int)size);
                 }
-                
+
                 fontAwesome = Font.createFont(Font.TRUETYPE_FONT, is);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(fontAwesome);
-                is.close();
-                
+
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to load FontAwesome", e);
                 return new Font("SansSerif", Font.PLAIN, (int)size);
             }
         }

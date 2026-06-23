@@ -18,8 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BonCommandeImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(BonCommandeImpression.class);
 
     private String numeroBonCommande;
     private String dateBonCommande;
@@ -151,7 +155,7 @@ public class BonCommandeImpression implements Printable {
             printFooter(g2d, margin, y, contentWidth, pageFormat);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression du Bon de Commande", e);
             throw new PrinterException("Erreur d'impression: " + e.getMessage());
         }
 
@@ -170,7 +174,7 @@ public class BonCommandeImpression implements Printable {
                 Image logoImage = logoIcon.getImage();
                 g2d.drawImage(logoImage, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du chargement du logo", e); }
         }
 
         if (!logoPrinted) {
@@ -516,7 +520,7 @@ public class BonCommandeImpression implements Printable {
     // LANCER IMPRESSION
     // =========================================================================
     public void imprimer() throws PrinterException {
-        System.out.println("Démarrage de l'impression Bon de Commande...");
+        log.info("Démarrage de l'impression Bon de Commande...");
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("Bon Commande " + numeroBonCommande);
         job.setPrintable(this);

@@ -34,8 +34,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AjouterVoiture extends JDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(AjouterVoiture.class);
 
     private JTextField txtMatricule;
     private JButton btnValider;
@@ -67,20 +71,17 @@ public class AjouterVoiture extends JDialog {
     // CHARGEMENT DE LA POLICE FONTAWESOME
     // =========================================================================
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to load FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -420,10 +421,10 @@ public class AjouterVoiture extends JDialog {
                 dialog.setVisible(true);
                 
                 if (dialog.getVoitureId() > 0) {
-                    System.out.println("Voiture ajoutée - ID: " + dialog.getVoitureId() + ", Matricule: " + dialog.getMatricule());
+                    log.info("Voiture ajoutée - ID: {}, Matricule: {}", dialog.getVoitureId(), dialog.getMatricule());
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to start AjouterVoiture", e);
             }
         });
     }

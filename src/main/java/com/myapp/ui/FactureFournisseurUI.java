@@ -23,7 +23,13 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.swing.text.JTextComponent;
 
+import com.myapp.util.AppTheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FactureFournisseurUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureFournisseurUI.class);
 
     // -- Palette (couleurs originales conservées) ----------------------
     private static final Color BG_PAGE        = new Color(0xF5F0E8);
@@ -135,7 +141,7 @@ public class FactureFournisseurUI extends JFrame {
     private void initializeUI() {
         setTitle("Factures Fournisseurs - CHAA_ELECT");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
+        AppTheme.init();
         chargerLogo();
 
         JPanel content = new JPanel(new BorderLayout(0, 0));
@@ -673,10 +679,12 @@ public class FactureFournisseurUI extends JFrame {
             
             // Vérification si le prix est 0 (optionnel mais recommandé)
             if (prix == 0) {
-                int confirm = JOptionPane.showConfirmDialog(this,
+                Object[] optionsPrix = {"Oui", "Non"};
+                int confirm = JOptionPane.showOptionDialog(this,
                     "Le prix d'achat est 0 DT. Voulez-vous continuer ?",
-                    "Prix nul", JOptionPane.YES_NO_OPTION);
-                if (confirm != JOptionPane.YES_OPTION) {
+                    "Prix nul", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, optionsPrix, optionsPrix[1]);
+                if (confirm != 0) {
                     return;
                 }
             }
@@ -691,7 +699,7 @@ public class FactureFournisseurUI extends JFrame {
             txtQuantite.requestFocus();
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Erreur lors de l'ajout d'un article à la facture", ex);
             showMsg("Erreur : " + ex.getMessage());
         }
     }
@@ -770,8 +778,8 @@ public class FactureFournisseurUI extends JFrame {
             CalculTotauxAchat t = factureManager.calculerTotaux();
             double retPct = 0;
             try { retPct = Double.parseDouble(txtRetenueSource.getText().trim().replace(",", ".")); }
-            catch (Exception ignored) {}
-            
+            catch (Exception ex) { log.warn("Format de retenue invalide, utilisation de 0%: {}", txtRetenueSource.getText()); }
+
             // ⚠️ RETENUE APPLIQUÉE UNIQUEMENT SI TOTAL HT >= 1000 DT
             double retenu = 0;
             if (t.totalHT >= SEUIL_RETENUE_HT) {
@@ -808,7 +816,7 @@ public class FactureFournisseurUI extends JFrame {
                         ajouterHistoriqueEntree(articleId, desig, qte, utilisateur);
                     }
                 } catch (Exception ex) {
-                    System.err.println("Ligne " + i + " : " + ex.getMessage());
+                    log.error("Erreur lors du traitement de la ligne {} de la facture", i, ex);
                 }
             }
 
@@ -837,7 +845,7 @@ public class FactureFournisseurUI extends JFrame {
             viderFacture();
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Erreur lors de la validation de la facture", ex);
             showMsg("Erreur : " + ex.getMessage());
         } finally {
             factureEnCours = false;
@@ -858,7 +866,7 @@ public class FactureFournisseurUI extends JFrame {
             pstmt.setString(4, utilisateur);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Erreur lors de l'ajout dans Historique_Entrees : " + e.getMessage());
+            log.error("Erreur lors de l'ajout dans Historique_Entrees", e);
         }
     }
 
@@ -871,7 +879,7 @@ public class FactureFournisseurUI extends JFrame {
                 return rs.next() && rs.getInt(1) > 0;
             }
         } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
+            log.error("Erreur lors de la vérification du numéro de facture en base", ex);
         }
         return false;
     }
@@ -898,7 +906,7 @@ public class FactureFournisseurUI extends JFrame {
                 txtMatriculeFiscale.getText(), txtAdresse.getText(), txtTel.getText(),
                 model, retPct, retenu, net, logoIcon).imprimer();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("Erreur lors de l'impression de la facture", ex);
             showMsg("Erreur impression : " + ex.getMessage());
         }
     }
@@ -947,7 +955,7 @@ public class FactureFournisseurUI extends JFrame {
                     catch (NumberFormatException ignored) {}
                 }
             }
-        } catch (Exception ex) { ex.printStackTrace(); }
+        } catch (Exception ex) { log.error("Erreur lors de la génération du numéro de facture", ex); }
         lblNumeroFacture.setText(prefix + String.format("%04d", seq));
     }
 

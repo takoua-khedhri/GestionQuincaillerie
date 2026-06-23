@@ -15,8 +15,11 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SupprimerClient extends JDialog {
+   private static final Logger log = LoggerFactory.getLogger(SupprimerClient.class);
    private JButton btnConfirmer;
    private JButton btnAnnuler;
    private ListeClients parent;
@@ -127,7 +130,7 @@ public class SupprimerClient extends JDialog {
             conn.close();
          }
       } catch (SQLException var9) {
-         var9.printStackTrace();
+         log.error("Error deleting client id={}", this.clientId, var9);
          JOptionPane.showMessageDialog(this, "Erreur lors de la suppression: " + var9.getMessage(), "Erreur", 0);
       }
 

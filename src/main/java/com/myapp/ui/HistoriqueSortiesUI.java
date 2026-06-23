@@ -671,7 +671,7 @@ public class HistoriqueSortiesUI extends JFrame {
                 options,
                 options[1]);
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (confirm == 0) {
             SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                 @Override
                 protected Void doInBackground() throws Exception {

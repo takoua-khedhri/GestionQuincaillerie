@@ -1,6 +1,7 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.util.AppTheme;
 import com.myapp.print.FactureFournisseurImpression;
 import java.awt.*;
 import java.awt.event.*;
@@ -13,7 +14,12 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class HistoriqueAchats extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(HistoriqueAchats.class);
 
     // ── Palette ──────────────────────────────────────────────────────────────
     private static final Color C_HEADER_BG = new Color(44,  62,  80);
@@ -57,8 +63,7 @@ public class HistoriqueAchats extends JFrame {
     }
 
     private void applyLookAndFeel() {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-        catch (Exception ignored) {}
+        AppTheme.init();
     }
 
     // ── Main UI ───────────────────────────────────────────────────────────────
@@ -329,7 +334,7 @@ public class HistoriqueAchats extends JFrame {
                 });
                 comboFournisseur.addItem(full);
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors du chargement des fournisseurs", e); }
     }
 
     private void loadAchatsData() {
@@ -347,7 +352,7 @@ public class HistoriqueAchats extends JFrame {
             while (rs.next()) { model.addRow(buildRow(rs)); }
             updateCompteur();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors du chargement des achats", e);
             JOptionPane.showMessageDialog(this, "Erreur chargement : " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
         }
@@ -391,7 +396,7 @@ public class HistoriqueAchats extends JFrame {
             JOptionPane.showMessageDialog(this,
                 model.getRowCount() + " facture(s) trouvée(s)", "Résultat", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la recherche des achats", e);
             JOptionPane.showMessageDialog(this, "Erreur recherche : " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
         }
@@ -673,12 +678,14 @@ public class HistoriqueAchats extends JFrame {
                 return;
             }
 
-            int ok = JOptionPane.showConfirmDialog(dlg,
+            Object[] optionsConfirm = {"Oui", "Non"};
+            int ok = JOptionPane.showOptionDialog(dlg,
                 "Confirmer le changement de statut ?\n\n" +
                 "  " + statutActuel + "  →  " + statutLabels[idx],
-                "Confirmation", JOptionPane.YES_NO_OPTION);
+                "Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, optionsConfirm, optionsConfirm[1]);
 
-            if (ok == JOptionPane.YES_OPTION) {
+            if (ok == 0) {
                 if (mettreAJourStatut(factureId, nouveauStatut)) {
                     JOptionPane.showMessageDialog(dlg,
                         "Statut mis à jour avec succès !", "Succès", JOptionPane.INFORMATION_MESSAGE);
@@ -708,7 +715,7 @@ public class HistoriqueAchats extends JFrame {
             pst.setInt(2, factureId);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour du statut de la facture {}", factureId, e);
             return false;
         }
     }
@@ -723,11 +730,13 @@ public class HistoriqueAchats extends JFrame {
         int    factureId = (int)    model.getValueAt(row, 0);
         String numero    = (String) model.getValueAt(row, 1);
 
-        int ok = JOptionPane.showConfirmDialog(this,
+        Object[] optionsSuppr = {"Oui", "Non"};
+        int ok = JOptionPane.showOptionDialog(this,
             "Supprimer la facture N° " + numero + " ?",
-            "Confirmation suppression", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            "Confirmation suppression", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+            null, optionsSuppr, optionsSuppr[1]);
 
-        if (ok != JOptionPane.YES_OPTION) return;
+        if (ok != 0) return;
 
         restaurerStockAvantSuppression(factureId);
 
@@ -739,7 +748,7 @@ public class HistoriqueAchats extends JFrame {
             JOptionPane.showMessageDialog(this, "Facture supprimée avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
             loadAchatsData();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la suppression de la facture", e);
             JOptionPane.showMessageDialog(this, "Erreur suppression : " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -760,7 +769,7 @@ public class HistoriqueAchats extends JFrame {
                     p2.executeUpdate();
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la restauration du stock avant suppression", e); }
     }
 
     // =========================================================================

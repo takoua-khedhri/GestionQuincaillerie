@@ -25,8 +25,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StockImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(StockImpression.class);
 
     private List<ArticleStock> articles;
     private ImageIcon logoIcon;
@@ -79,7 +83,7 @@ public class StockImpression implements Printable {
                 }
             }
         } catch (Exception e) {
-            System.err.println("⚠️ Logo non trouvé: " + e.getMessage());
+            log.error("Logo non trouve: {}", e.getMessage());
         }
         return null;
     }
@@ -96,10 +100,9 @@ public class StockImpression implements Printable {
                 int stock = rs.getInt("stock");
                 articles.add(new ArticleStock(id, designation, stock));
             }
-            System.out.println("✅ Données de stock chargées: " + articles.size() + " articles");
+            log.info("Donnees de stock chargees: {} articles", articles.size());
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors du chargement des données de stock: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Erreur lors du chargement des donnees de stock", e);
         }
     }
 
@@ -120,11 +123,11 @@ public class StockImpression implements Printable {
         int totalPages = getTotalPages((int) pageFormat.getImageableHeight());
 
         if (pageIndex >= totalPages) {
-            System.out.println("📄 Page " + (pageIndex + 1) + "/" + totalPages + " - Pas de contenu supplémentaire");
+            log.info("Page {}/{} - Pas de contenu supplementaire", pageIndex + 1, totalPages);
             return NO_SUCH_PAGE;
         }
 
-        System.out.println("📄 Impression page " + (pageIndex + 1) + "/" + totalPages);
+        log.info("Impression page {}/{}", pageIndex + 1, totalPages);
 
         Graphics2D g2d = (Graphics2D) graphics;
         g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
@@ -161,7 +164,7 @@ public class StockImpression implements Printable {
             printFooter(g2d, MARGIN, pageHeight, contentWidth, pageIndex, totalPages);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression du stock", e);
             throw new PrinterException("Erreur d'impression du stock: " + e.getMessage());
         }
 
@@ -179,7 +182,7 @@ public class StockImpression implements Printable {
                 g2d.drawImage(logoImage, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
             } catch (Exception e) {
-                System.err.println("Erreur logo: " + e.getMessage());
+                log.error("Erreur logo: {}", e.getMessage());
             }
         }
 
@@ -332,19 +335,19 @@ public class StockImpression implements Printable {
             return;
         }
 
-        System.out.println("🖨️ Démarrage de l'impression de l'état du stock...");
-        System.out.println("📊 Nombre d'articles: " + articles.size());
+        log.info("Demarrage de l'impression de l'etat du stock...");
+        log.info("Nombre d'articles: {}", articles.size());
 
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("État du Stock Journalier");
         job.setPrintable(this);
 
         if (job.printDialog()) {
-            System.out.println("✅ Impression confirmée par l'utilisateur");
+            log.info("Impression confirmee par l'utilisateur");
             job.print();
-            System.out.println("✅ Impression terminée avec succès");
+            log.info("Impression terminee avec succes");
         } else {
-            System.out.println("❌ Impression annulée par l'utilisateur");
+            log.info("Impression annulee par l'utilisateur");
         }
     }
 }

@@ -31,8 +31,12 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModifierClient extends JDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(ModifierClient.class);
 
     private JTextField txtNom;
     private JTextField txtPrenom;
@@ -389,7 +393,7 @@ public class ModifierClient extends JDialog {
             this.dispose();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error updating client id={}", this.clientId, e);
             JOptionPane.showMessageDialog(this, "Erreur lors de la modification du client: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }

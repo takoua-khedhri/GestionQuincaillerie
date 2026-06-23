@@ -16,8 +16,12 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FactureImpressionTicket implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureImpressionTicket.class);
 
     private String numeroTicket;
     private String dateTicket;
@@ -226,7 +230,7 @@ public class FactureImpressionTicket implements Printable {
             try {
                 job.print();
             } catch (PrinterException e) {
-                e.printStackTrace();
+                log.error("Erreur lors de l'impression du ticket", e);
             }
         }
     }

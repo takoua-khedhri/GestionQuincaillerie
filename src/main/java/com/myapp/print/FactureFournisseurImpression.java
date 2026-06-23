@@ -18,8 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FactureFournisseurImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureFournisseurImpression.class);
 
     private String numeroFacture;
     private String dateFacture;
@@ -133,7 +137,7 @@ public class FactureFournisseurImpression implements Printable {
             printSignatureAndStamp(g2d, margin, y, contentWidth);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression de la Facture Fournisseur", e);
             throw new PrinterException("Erreur d'impression: " + e.getMessage());
         }
 
@@ -152,7 +156,7 @@ public class FactureFournisseurImpression implements Printable {
                 Image logoImage = logoIcon.getImage();
                 g2d.drawImage(logoImage, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du chargement du logo", e); }
         }
 
         if (!logoPrinted) {
@@ -511,7 +515,7 @@ public class FactureFournisseurImpression implements Printable {
     private double parseDouble(Object o) {
         if (o == null) return 0.0;
         String s = o.toString().replace(" ", "").replace(",", ".").replaceAll("[^0-9.-]", "");
-        try { return Double.parseDouble(s); } catch (Exception e) { return 0.0; }
+        try { return Double.parseDouble(s); } catch (Exception e) { log.error("Erreur lors du parsing du montant: {}", s, e); return 0.0; }
     }
 
     private String formatMontantDinar(double montant) {
@@ -599,7 +603,7 @@ public class FactureFournisseurImpression implements Printable {
     // LANCEMENT IMPRESSION
     // =========================================================================
     public void imprimer() throws PrinterException {
-        System.out.println("Impression facture fournisseur: " + numeroFacture);
+        log.info("Impression facture fournisseur: {}", numeroFacture);
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("FactureFournisseur_" + numeroFacture);
         job.setPrintable(this);

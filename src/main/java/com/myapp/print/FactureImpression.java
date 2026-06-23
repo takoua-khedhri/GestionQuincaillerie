@@ -19,8 +19,12 @@ import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
 import com.myapp.db.DatabaseManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FactureImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureImpression.class);
 
     private String numeroFacture;
     private String dateFacture;
@@ -148,7 +152,7 @@ public class FactureImpression implements Printable {
             printFooter(g2d, margin, y, contentWidth, pageFormat);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression de la Facture", e);
             throw new PrinterException("Erreur d'impression: " + e.getMessage());
         }
 
@@ -167,7 +171,7 @@ public class FactureImpression implements Printable {
                 Image logoImage = logoIcon.getImage();
                 g2d.drawImage(logoImage, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du chargement du logo", e); }
         }
 
         if (!logoPrinted) {
@@ -436,7 +440,7 @@ public class FactureImpression implements Printable {
                 totalRemise += remiseLigne;
 
             } catch (Exception e) {
-                System.err.println("Erreur calcul total ligne " + i + ": " + e.getMessage());
+                log.error("Erreur calcul total ligne {}: {}", i, e.getMessage());
             }
         }
 
@@ -537,7 +541,7 @@ public class FactureImpression implements Printable {
             try {
                 String ttcStr = model.getValueAt(i, 8).toString().replace(",", ".").replaceAll("[^0-9.-]", "");
                 totalTTC += Double.parseDouble(ttcStr);
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du calcul du total TTC pour montant en lettres", e); }
         }
 
         double totalTTCFinal      = totalTTC + timbre;
@@ -629,7 +633,7 @@ public class FactureImpression implements Printable {
             return resultat.toString();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la conversion du montant en lettres", e);
             return "Montant non convertible";
         }
     }
@@ -701,17 +705,17 @@ public class FactureImpression implements Printable {
     // LANCER IMPRESSION
     // =========================================================================
     public void imprimer() throws PrinterException {
-        System.out.println("Démarrage de l'impression...");
+        log.info("Démarrage de l'impression...");
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("Facture " + numeroFacture);
         job.setPrintable(this);
         PageFormat pageFormat = job.defaultPage();
         pageFormat.setOrientation(PageFormat.PORTRAIT);
         if (job.printDialog()) {
-            System.out.println("Impression confirmée par l'utilisateur");
+            log.info("Impression confirmée par l'utilisateur");
             job.print();
         } else {
-            System.out.println("Impression annulée par l'utilisateur");
+            log.info("Impression annulée par l'utilisateur");
             throw new PrinterException("Impression annulée");
         }
     }

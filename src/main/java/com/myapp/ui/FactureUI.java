@@ -8,6 +8,7 @@ import com.myapp.logic.ScanService;
 import com.myapp.print.FactureImpression;
 import com.myapp.print.FactureImpressionTicket;
 import com.myapp.print.BLImpression;
+import com.myapp.util.AppTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -74,7 +75,12 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FactureUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(FactureUI.class);
 
     // --- COMPOSANTS UI ---
     private JComboBox<String> comboClients;
@@ -148,7 +154,7 @@ public class FactureUI extends JFrame {
 
     public FactureUI() {
         df = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.FRANCE));
-        System.out.println("Initialisation de FactureUI");
+        log.info("Initialisation de FactureUI");
         this.setupManagers();
         this.initializeUI();
         this.loadData();
@@ -214,7 +220,7 @@ public class FactureUI extends JFrame {
         mainContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         this.chargerLogo();
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
+        AppTheme.init();
 
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.add(this.createHeaderPanel(), BorderLayout.NORTH);
@@ -385,7 +391,7 @@ public class FactureUI extends JFrame {
             this.txtQuantite.setText("1");
             this.txtQuantite.requestFocus();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'ajout d'un article", e);
         }
     }
 
@@ -761,7 +767,7 @@ public class FactureUI extends JFrame {
             this.calculerTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du calcul du PU TTC", e);
             JOptionPane.showMessageDialog(this, "Erreur lors du calcul: " + e.getMessage());
         } finally {
             this.miseAJourEnCours = false;
@@ -809,7 +815,7 @@ public class FactureUI extends JFrame {
             this.calculerTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour de la quantite", e);
         } finally {
             this.miseAJourEnCours = false;
         }
@@ -1017,24 +1023,28 @@ public class FactureUI extends JFrame {
             double netAPayer = totaux.totalTTC - retenueSource;
 
             if (chkRetenueSource.isSelected() && totaux.totalHT < SEUIL_RETENUE_HT) {
-                int rep = JOptionPane.showConfirmDialog(this,
+                Object[] optionsRetenue = {"Oui", "Non"};
+                int rep = JOptionPane.showOptionDialog(this,
                     "La retenue est cochée mais le HT (" + formatMontantDinar(totaux.totalHT) +
                     " DT) est inferieur au seuil de " + (int) SEUIL_RETENUE_HT + " DT.\n" +
                     "Aucune retenue ne sera appliquée. Continuer ?",
                     "Retenue à la source",
                     JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-                if (rep != JOptionPane.YES_OPTION) return;
+                    JOptionPane.WARNING_MESSAGE,
+                    null, optionsRetenue, optionsRetenue[1]);
+                if (rep != 0) return;
             }
 
             // DEMANDE DE CONFIRMATION AVANT IMPRESSION
-            int confirmation = JOptionPane.showConfirmDialog(this,
+            Object[] optionsImpression = {"Oui", "Non"};
+            int confirmation = JOptionPane.showOptionDialog(this,
                 "Voulez-vous imprimer la facture ?",
                 "Confirmation d'impression",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-            
-            if (confirmation != JOptionPane.YES_OPTION) {
+                JOptionPane.QUESTION_MESSAGE,
+                null, optionsImpression, optionsImpression[0]);
+
+            if (confirmation != 0) {
                 factureEnCours = false;
                 btnGenererFacture.setEnabled(true);
                 return;
@@ -1142,13 +1152,15 @@ public class FactureUI extends JFrame {
                 
                 // DEMANDE D'IMPRESSION DU BL PRÉREMPLI
                 if (impressionReussie) {
-                    int reponseBL = JOptionPane.showConfirmDialog(this,
+                    Object[] optionsBL = {"Oui", "Non"};
+                    int reponseBL = JOptionPane.showOptionDialog(this,
                         "Voulez-vous imprimer le Bon de Livraison accompagnant cette facture ?",
                         "Impression du Bon de Livraison",
                         JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
-                    
-                    if (reponseBL == JOptionPane.YES_OPTION) {
+                        JOptionPane.QUESTION_MESSAGE,
+                        null, optionsBL, optionsBL[0]);
+
+                    if (reponseBL == 0) {
                         imprimerBLPrerempli(numeroDocument, this.txtDateFacture.getText(),
                             printNom, printPrenom, printAdresse, printTel, printMatricule,
                             voitureSelectionnee, modePaiement, totaux, timbre);
@@ -1161,7 +1173,7 @@ public class FactureUI extends JFrame {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la generation de la facture", e);
             JOptionPane.showMessageDialog(this, "Erreur : " + e.getMessage());
         } finally {
             factureEnCours = false;
@@ -1182,9 +1194,9 @@ public class FactureUI extends JFrame {
         }
         boolean ok = DatabaseManager.enregistrerSortiesStockBatch(lignes, numeroDocument);
         if (ok) {
-            System.out.println("✅ Historique sorties enregistré pour: " + numeroDocument);
+            log.info("Historique sorties enregistre pour: {}", numeroDocument);
         } else {
-            System.err.println("❌ Échec enregistrement historique sorties pour: " + numeroDocument);
+            log.error("Echec enregistrement historique sorties pour: {}", numeroDocument);
         }
     }
 
@@ -1231,7 +1243,7 @@ public class FactureUI extends JFrame {
                 "Erreur lors de l'impression du Bon de Livraison: " + ex.getMessage(),
                 "Erreur d'impression", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur inattendue lors de l'impression du BL", e);
             JOptionPane.showMessageDialog(this,
                 "Erreur inattendue lors de l'impression du BL: " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -1295,9 +1307,9 @@ public class FactureUI extends JFrame {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la generation du numero de facture", e);
         } finally {
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            if (conn != null) try { conn.close(); } catch (SQLException e) { log.error("Erreur fermeture connexion genererNumeroFacture", e); }
         }
         this.lblNumeroFacture.setText(prefix + String.format("%04d", seq));
     }
@@ -1319,9 +1331,9 @@ public class FactureUI extends JFrame {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la generation du numero de ticket", e);
         } finally {
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            if (conn != null) try { conn.close(); } catch (SQLException e) { log.error("Erreur fermeture connexion genererNumeroTicket", e); }
         }
         this.lblNumeroFacture.setText(prefix + String.format("%04d", seq));
     }
@@ -1335,7 +1347,7 @@ public class FactureUI extends JFrame {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.err.println("Erreur verification numero: " + e.getMessage());
+            log.error("Erreur verification numero: {}", e.getMessage(), e);
         }
         return false;
     }
@@ -1353,7 +1365,7 @@ public class FactureUI extends JFrame {
                 DatabaseManager.mettreAJourStock(designation, quantite);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors de l'insertion des details ou mise a jour du stock", e);
             }
         }
     }
@@ -1594,7 +1606,9 @@ public class FactureUI extends JFrame {
                     new ImageIcon(f.getAbsolutePath()).getImage()
                         .getScaledInstance(60, 60, Image.SCALE_SMOOTH));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Erreur lors du chargement du logo", e);
+        }
     }
 
     public void chargerFacturePourModification(Integer factureId) {

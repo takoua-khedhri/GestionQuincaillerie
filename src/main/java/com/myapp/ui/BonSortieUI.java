@@ -3,7 +3,8 @@ package com.myapp.ui;
 import com.myapp.db.DatabaseManager;
 import com.myapp.logic.BonSortieManager;
 import com.myapp.logic.BonSortieManager.CalculTotaux;
-import com.myapp.logic.ScanService; 
+import com.myapp.logic.ScanService;
+import com.myapp.util.AppTheme;
 import com.myapp.print.BonSortieImpression;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -64,7 +65,12 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BonSortieUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(BonSortieUI.class);
 
     // Composants principaux
     private JComboBox<String> comboClients;
@@ -124,7 +130,7 @@ public class BonSortieUI extends JFrame {
     public BonSortieUI() {
         df = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.FRANCE));
         
-        System.out.println("🚀 Initialisation de BonSortieUI");
+        log.info("Initialisation de BonSortieUI");
         this.setupManagers();
         this.initializeUI();
         this.loadData();
@@ -148,7 +154,7 @@ public class BonSortieUI extends JFrame {
         mainContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         this.chargerLogo();
-        this.applyModernLook();
+        AppTheme.init();
         
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.add(this.createHeaderPanel(), BorderLayout.NORTH);
@@ -777,7 +783,7 @@ public class BonSortieUI extends JFrame {
             this.calculerEtAfficherTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du calcul du PU TTC", e);
             JOptionPane.showMessageDialog(this, "Erreur lors du calcul: " + e.getMessage());
         } finally {
             this.miseAJourEnCours = false;
@@ -831,7 +837,7 @@ public class BonSortieUI extends JFrame {
             this.calculerEtAfficherTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour de la quantite", e);
         } finally {
             this.miseAJourEnCours = false;
         }
@@ -1231,7 +1237,7 @@ public class BonSortieUI extends JFrame {
         } catch (PrinterException e) {
             JOptionPane.showMessageDialog(this, "Erreur impression : " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la generation du bon de sortie", e);
             JOptionPane.showMessageDialog(this, "Erreur : " + e.getMessage());
         }
     }
@@ -1276,12 +1282,11 @@ public class BonSortieUI extends JFrame {
                 Image image = this.logoIcon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
                 this.logoIcon = new ImageIcon(image);
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Erreur lors du chargement du logo", e);
+        }
     }
 
-    private void applyModernLook() {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
-    }
 
     private void chargerClients() {
         this.comboClients.removeAllItems();

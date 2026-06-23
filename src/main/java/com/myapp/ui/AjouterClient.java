@@ -34,8 +34,12 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AjouterClient extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(AjouterClient.class);
 
     private JTextField txtNom;
     private JTextField txtPrenom;
@@ -71,19 +75,17 @@ public class AjouterClient extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
+            log.error("Failed to load FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -149,7 +151,7 @@ public class AjouterClient extends JFrame {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error checking if client exists", e);
         }
         return false;
     }
@@ -418,7 +420,7 @@ public class AjouterClient extends JFrame {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 new AjouterClient(null);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to start AjouterClient", e);
             }
         });
     }

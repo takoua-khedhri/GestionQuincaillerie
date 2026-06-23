@@ -5,6 +5,7 @@ import com.myapp.logic.DevisManager;
 import com.myapp.logic.DevisManager.CalculTotaux;
 import com.myapp.logic.ScanService; 
 import com.myapp.print.DevisImpression;
+import com.myapp.util.AppTheme;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -63,7 +64,12 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class DevisUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(DevisUI.class);
 
     // --- Composants UI ---
     private JComboBox<String> comboClients;
@@ -119,7 +125,7 @@ public class DevisUI extends JFrame {
     public DevisUI() {
         df = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.FRANCE));
         
-        System.out.println("🚀 Initialisation de DevisUI");
+        log.info("Initialisation de DevisUI");
         this.setupManagers();
         this.initializeUI();
         this.loadData();
@@ -143,7 +149,7 @@ public class DevisUI extends JFrame {
         mainContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         this.chargerLogo();
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
+        AppTheme.init();
         
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.add(this.createHeaderPanel(), BorderLayout.NORTH);
@@ -730,7 +736,7 @@ public class DevisUI extends JFrame {
             this.calculerEtAfficherTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du recalcul depuis PU TTC", e);
             JOptionPane.showMessageDialog(this, "Erreur lors du calcul: " + e.getMessage());
         } finally {
             this.miseAJourEnCours = false;
@@ -776,7 +782,7 @@ public class DevisUI extends JFrame {
             this.calculerEtAfficherTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour de la quantite", e);
         } finally {
             this.miseAJourEnCours = false;
         }
@@ -930,7 +936,7 @@ public class DevisUI extends JFrame {
             this.txtQuantite.setText("1");
             this.txtQuantite.requestFocus();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'ajout d'un article au devis", e);
         }
     }
 
@@ -1004,8 +1010,8 @@ public class DevisUI extends JFrame {
             this.viderDevis();
         } catch (PrinterException e) {
             JOptionPane.showMessageDialog(this, "Erreur impression: " + e.getMessage());
-        } catch (Exception e) { 
-            e.printStackTrace(); 
+        } catch (Exception e) {
+            log.error("Erreur lors de la generation du devis", e);
             JOptionPane.showMessageDialog(this, "Erreur: " + e.getMessage());
         }
     }
@@ -1038,7 +1044,9 @@ public class DevisUI extends JFrame {
             if (f.exists()) {
                 this.logoIcon = new ImageIcon(new ImageIcon(f.getAbsolutePath()).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Erreur lors du chargement du logo", e);
+        }
     }
 
     private String formatMontantDinar(double montant) {

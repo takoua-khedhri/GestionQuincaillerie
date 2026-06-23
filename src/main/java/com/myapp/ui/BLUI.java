@@ -4,6 +4,7 @@ import com.myapp.db.DatabaseManager;
 import com.myapp.logic.BLManager;
 import com.myapp.logic.ScanService;
 import com.myapp.print.BLImpression;
+import com.myapp.util.AppTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -62,7 +63,12 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BLUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(BLUI.class);
 
     // Composants principaux
     private JComboBox<String> comboClients;
@@ -121,7 +127,7 @@ public class BLUI extends JFrame {
 
     public BLUI() {
         df = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.FRANCE));
-        System.out.println("🚀 Initialisation de BLUI");
+        log.info("Initialisation de BLUI");
         this.setupManagers();
         this.initializeUI();
         this.loadData();
@@ -215,7 +221,7 @@ public class BLUI extends JFrame {
         JPanel mainContainer = new JPanel(new BorderLayout());
         mainContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
         this.chargerLogo();
-        this.applyModernLook();
+        AppTheme.init();
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.add(this.createHeaderPanel(), BorderLayout.NORTH);
         contentPanel.add(this.createMainPanel(), BorderLayout.CENTER);
@@ -787,7 +793,7 @@ public class BLUI extends JFrame {
             this.calculerTotauxGlobaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour depuis PU TTC", e);
             JOptionPane.showMessageDialog(this, "Erreur lors du calcul: " + e.getMessage());
         } finally {
             this.miseAJourEnCours = false;
@@ -841,7 +847,7 @@ public class BLUI extends JFrame {
             this.calculerTotauxGlobaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise a jour de la quantite", e);
         } finally {
             this.miseAJourEnCours = false;
         }
@@ -1080,7 +1086,7 @@ public class BLUI extends JFrame {
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Quantité invalide (entrez un nombre entier)");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'ajout d'un article", e);
         }
     }
 
@@ -1120,7 +1126,7 @@ public class BLUI extends JFrame {
                 lignes.add(new String[]{designation, String.valueOf(quantite)});
  
             } catch (Exception e) {
-                System.err.println("Erreur mise à jour stock BL ligne " + i + ": " + e.getMessage());
+                log.error("Erreur mise a jour stock BL ligne {}: {}", i, e.getMessage(), e);
             }
         }
  
@@ -1246,9 +1252,9 @@ public class BLUI extends JFrame {
                     int tva = tvaStr.isEmpty() ? 0 : Integer.parseInt(tvaStr);
                     DatabaseManager.insererDetailFacture(blId, designation, qte, puHT, tva);
                 }
-                System.out.println("✅ BL enregistré en base, ID = " + blId);
+                log.info("BL enregistre en base, ID = {}", blId);
             } else {
-                System.err.println("❌ Échec enregistrement BL en base");
+                log.error("Echec enregistrement BL en base");
                 JOptionPane.showMessageDialog(this,
                     "⚠️ BL imprimé mais non enregistré en base !",
                     "Avertissement", JOptionPane.WARNING_MESSAGE);
@@ -1265,7 +1271,7 @@ public class BLUI extends JFrame {
             JOptionPane.showMessageDialog(this,
                 "Erreur lors de l'impression : " + ex.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur inattendue lors de la generation du BL", e);
             JOptionPane.showMessageDialog(this,
                 "Erreur inattendue : " + e.getMessage());
         }
@@ -1309,12 +1315,9 @@ public class BLUI extends JFrame {
                     break; 
                 } 
             }
-        } catch(Exception e) {}
+        } catch(Exception e) { log.error("Erreur lors du chargement du logo", e); }
     }
 
-    private void applyModernLook() {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
-    }
 
     private void genererNumeroBL() {
         int year = LocalDate.now().getYear();

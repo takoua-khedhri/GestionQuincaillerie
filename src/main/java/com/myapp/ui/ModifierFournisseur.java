@@ -37,8 +37,12 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModifierFournisseur extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(ModifierFournisseur.class);
 
     private JTextField txtNom;
     private JTextField txtPrenom;
@@ -73,20 +77,17 @@ public class ModifierFournisseur extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to load FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -603,8 +604,8 @@ public class ModifierFournisseur extends JFrame {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "❌ Erreur lors de la modification du fournisseur: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            log.error("Error updating fournisseur id={}", this.fournisseurId, e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la modification du fournisseur: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -618,7 +619,7 @@ public class ModifierFournisseur extends JFrame {
                 new ModifierFournisseur(null, 1, "DISTRIBUTION PLUS", "SARL", "71234567", 
                     "Zone Industrielle", "123456789A123", "contact@distribution.tn");
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to start ModifierFournisseur", e);
             }
         });
     }

@@ -1,7 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
-import com.myapp.db.GestionBackup; 
+import com.myapp.db.GestionBackup;
+import com.myapp.util.AppTheme;
 import com.myapp.util.SessionManager;
 
 import java.awt.BorderLayout;
@@ -32,11 +33,15 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.UIManager;
 import javax.swing.border.Border;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class LoginUI extends JFrame {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginUI.class);
+
     // Composants UI
     private JTextField txtNom;
     private JPasswordField txtMotDePasse;
@@ -50,10 +55,10 @@ public class LoginUI extends JFrame {
 
         this.setTitle("Système de Facturation - Connexion");
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        
-        // ⚠️ IMPORTANT : On intercepte la fermeture pour faire le backup
+
+        // On intercepte la fermeture pour faire le backup
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        
+
         this.setLocationRelativeTo(null);
         this.setLayout(new BorderLayout());
 
@@ -62,21 +67,12 @@ public class LoginUI extends JFrame {
         if (session.isSessionActive()) {
             this.redirectToDashboard();
         } else {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                // Ignore style errors
-            }
-
             this.initUI();
         }
     }
 
     // ==================== GESTION FERMETURE & BACKUP ====================
 
-    /**
-     * Cette méthode intercepte le clic sur la croix (X)
-     */
     @Override
     protected void processWindowEvent(java.awt.event.WindowEvent e) {
         if (e.getID() == java.awt.event.WindowEvent.WINDOW_CLOSING) {
@@ -87,23 +83,20 @@ public class LoginUI extends JFrame {
     }
 
     private void quitterApplicationAvecBackup() {
-        // 1. Indiquer visuellement que l'app se ferme
         this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        
-        // 2. Lancer le backup
+
         try {
-            System.out.println("🔄 Fermeture de l'application : Lancement du backup...");
-            boolean succes = GestionBackup.effectuerBackup(); 
-            
+            logger.info("Fermeture de l'application : Lancement du backup...");
+            boolean succes = GestionBackup.effectuerBackup();
+
             if (succes) {
-                System.out.println("✅ Backup terminé avec succès avant fermeture.");
+                logger.info("Backup terminé avec succès avant fermeture.");
             } else {
-                System.err.println("⚠️ Le backup a rencontré un problème, mais l'app va se fermer.");
+                logger.warn("Le backup a rencontré un problème, mais l'app va se fermer.");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("Erreur lors du backup à la fermeture", ex);
         } finally {
-            // 3. Fermer réellement l'application
             System.exit(0);
         }
     }
@@ -111,20 +104,18 @@ public class LoginUI extends JFrame {
     // ==================== UI & LOGIQUE ====================
 
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
-
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
+                logger.warn("Police FontAwesome introuvable, utilisation de la police par défaut");
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
+            logger.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -137,9 +128,8 @@ public class LoginUI extends JFrame {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                Color color1 = new Color(41, 128, 185);
-                Color color2 = new Color(44, 62, 80);
-                GradientPaint gp = new GradientPaint(0.0F, 0.0F, color1, (float) this.getWidth(), (float) this.getHeight(), color2);
+                GradientPaint gp = new GradientPaint(0.0F, 0.0F, AppTheme.PRIMARY,
+                        (float) this.getWidth(), (float) this.getHeight(), AppTheme.DARK);
                 g2d.setPaint(gp);
                 g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
             }
@@ -175,7 +165,6 @@ public class LoginUI extends JFrame {
         Border empty = BorderFactory.createEmptyBorder(40, 50, 40, 50);
         contentPanel.setBorder(BorderFactory.createCompoundBorder(line, empty));
 
-        contentPanel.setPreferredSize(new Dimension(450, 550)); // Taille réduite car on a enlevé le bandeau démo
         contentPanel.setMinimumSize(new Dimension(350, 500));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -186,13 +175,13 @@ public class LoginUI extends JFrame {
         // 1. TITRE
         JLabel lblTitre = new JLabel("CONNEXION", JLabel.CENTER);
         lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblTitre.setForeground(new Color(44, 62, 80));
+        lblTitre.setForeground(AppTheme.DARK);
 
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 0, 5, 0);
         contentPanel.add(lblTitre, gbc);
 
-        JLabel lblSousTitre = new JLabel("Espace Administrateur", JLabel.CENTER);
+        JLabel lblSousTitre = new JLabel("Espace Utilisateur", JLabel.CENTER);
         lblSousTitre.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblSousTitre.setForeground(new Color(150, 150, 150));
 
@@ -213,7 +202,7 @@ public class LoginUI extends JFrame {
         userFieldPanel.setBackground(Color.WHITE);
         userFieldPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
-        JLabel userIcon = new JLabel("\uf007");
+        JLabel userIcon = new JLabel("");
         userIcon.setFont(this.fontAwesomeSolid != null ? this.fontAwesomeSolid.deriveFont(16f) : new Font("SansSerif", Font.PLAIN, 16));
         userIcon.setForeground(Color.GRAY);
         userIcon.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 5));
@@ -242,7 +231,7 @@ public class LoginUI extends JFrame {
         pwdFieldPanel.setBackground(Color.WHITE);
         pwdFieldPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
-        JLabel pwdIcon = new JLabel("\uf023");
+        JLabel pwdIcon = new JLabel("");
         pwdIcon.setFont(this.fontAwesomeSolid != null ? this.fontAwesomeSolid.deriveFont(16f) : new Font("SansSerif", Font.PLAIN, 16));
         pwdIcon.setForeground(Color.GRAY);
         pwdIcon.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 5));
@@ -261,7 +250,7 @@ public class LoginUI extends JFrame {
         // 4. BOUTON
         this.btnConnexion = new JButton("SE CONNECTER");
         this.btnConnexion.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        this.btnConnexion.setBackground(new Color(52, 152, 219));
+        this.btnConnexion.setBackground(AppTheme.INFO);
         this.btnConnexion.setForeground(Color.WHITE);
         this.btnConnexion.setFocusPainted(false);
         this.btnConnexion.setBorderPainted(false);
@@ -270,11 +259,11 @@ public class LoginUI extends JFrame {
 
         this.btnConnexion.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                LoginUI.this.btnConnexion.setBackground(new Color(41, 128, 185));
+                LoginUI.this.btnConnexion.setBackground(AppTheme.INFO_DARK);
             }
 
             public void mouseExited(MouseEvent evt) {
-                LoginUI.this.btnConnexion.setBackground(new Color(52, 152, 219));
+                LoginUI.this.btnConnexion.setBackground(AppTheme.INFO);
             }
         });
 
@@ -285,7 +274,7 @@ public class LoginUI extends JFrame {
         // 5. MESSAGE ERREUR
         this.lblMessage = new JLabel("", JLabel.CENTER);
         this.lblMessage.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        this.lblMessage.setForeground(new Color(231, 76, 60));
+        this.lblMessage.setForeground(AppTheme.DANGER);
 
         gbc.gridy = 7;
         gbc.insets = new Insets(0, 0, 10, 0);
@@ -314,34 +303,32 @@ public class LoginUI extends JFrame {
         // Petit timer pour l'effet visuel
         Timer timer = new Timer(500, (e) -> {
             if (!nom.isEmpty() && !motDePasse.isEmpty()) {
-                try {
-                    Connection conn = ConnexionSQLite.getConnection();
-                    // NOTE: Pour la sécurité, pensez à hasher le mot de passe !
-                    PreparedStatement pst = conn.prepareStatement("SELECT * FROM admin WHERE nom = ? AND pswd = ?");
+                try (Connection conn = ConnexionSQLite.getConnection();
+                     PreparedStatement pst = conn.prepareStatement(
+                             "SELECT nom, role FROM admin WHERE nom = ? AND pswd = ?")) {
+
                     pst.setString(1, nom);
                     pst.setString(2, motDePasse);
-                    ResultSet rs = pst.executeQuery();
 
-                    if (rs.next()) {
-                        SessionManager.getInstance().startSession(nom, "administrateur");
+                    try (ResultSet rs = pst.executeQuery()) {
+                        if (rs.next()) {
+                            String role = rs.getString("role");
+                            SessionManager.getInstance().startSession(nom, role);
 
-                        this.lblMessage.setText("Connexion réussie !");
-                        this.lblMessage.setForeground(new Color(46, 204, 113));
-                        
-                        Timer redirectTimer = new Timer(500, (evt) -> this.redirectToDashboard());
-                        redirectTimer.setRepeats(false);
-                        redirectTimer.start();
-                    } else {
-                        this.lblMessage.setText("Identifiants incorrects");
-                        this.lblMessage.setForeground(new Color(231, 76, 60));
-                        this.resetBoutonConnexion();
+                            this.lblMessage.setText("Connexion réussie !");
+                            this.lblMessage.setForeground(AppTheme.ACCENT);
+
+                            Timer redirectTimer = new Timer(500, (evt) -> this.redirectToDashboard());
+                            redirectTimer.setRepeats(false);
+                            redirectTimer.start();
+                        } else {
+                            this.lblMessage.setText("Identifiants incorrects");
+                            this.lblMessage.setForeground(AppTheme.DANGER);
+                            this.resetBoutonConnexion();
+                        }
                     }
-
-                    rs.close();
-                    pst.close();
-                    conn.close();
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    logger.error("Erreur lors de la vérification des identifiants", ex);
                     this.lblMessage.setText("Erreur Base de Données");
                     this.resetBoutonConnexion();
                 }
@@ -355,20 +342,27 @@ public class LoginUI extends JFrame {
     }
 
     private void redirectToDashboard() {
-        // Redirection vers le tableau de bord
-        (new AdminDashboard()).setVisible(true);
+        String role = SessionManager.getInstance().getRole();
+        if ("magasinier".equalsIgnoreCase(role)) {
+            // MagasinierDashboard sera créé ultérieurement, utiliser AdminDashboard en attendant
+            new AdminDashboard().setVisible(true);
+        } else {
+            new AdminDashboard().setVisible(true);
+        }
         this.dispose();
     }
 
     private void resetBoutonConnexion() {
         this.btnConnexion.setText("SE CONNECTER");
-        this.btnConnexion.setBackground(new Color(52, 152, 219));
+        this.btnConnexion.setBackground(AppTheme.INFO);
         this.btnConnexion.setEnabled(true);
     }
 
     public static void main(String[] args) {
+        AppTheme.init();
+        com.myapp.db.DatabaseMigration.migrate();
         SwingUtilities.invokeLater(() -> {
-            (new LoginUI()).setVisible(true);
+            new LoginUI().setVisible(true);
         });
     }
 }

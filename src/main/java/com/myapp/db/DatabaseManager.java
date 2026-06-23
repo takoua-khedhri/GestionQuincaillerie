@@ -2,6 +2,9 @@ package com.myapp.db;
 
 import com.myapp.models.Article;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseManager.class);
 
     // =========================================================================
     // 1. GESTION DES CLIENTS
@@ -33,7 +38,7 @@ public class DatabaseManager {
                 clients.add(affichage);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return clients;
     }
@@ -52,7 +57,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur ID Client: " + e.getMessage());
+            log.error("❌ Erreur ID Client: {}", e.getMessage());
         }
         return -1;
     }
@@ -78,7 +83,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return infos;
     }
@@ -90,12 +95,13 @@ public class DatabaseManager {
             pst.setString(1, nom);
             pst.setString(2, prenom);
             pst.setInt(3, numero);
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return false;
     }
@@ -119,7 +125,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return articles;
     }
@@ -145,7 +151,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur recherche par code: " + e.getMessage());
+            log.error("❌ Erreur recherche par code: {}", e.getMessage());
         }
         return null;
     }
@@ -158,7 +164,7 @@ public class DatabaseManager {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getDouble("prix_gros");
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Database error", e); }
         return 0.0;
     }
 
@@ -170,7 +176,7 @@ public class DatabaseManager {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getDouble("prix_detail");
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Database error", e); }
         return 0.0;
     }
 
@@ -194,7 +200,7 @@ public class DatabaseManager {
                     return String.format("REF%04d", rs.getInt("id"));
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Database error", e); }
         return "REF0000";
     }
 
@@ -212,7 +218,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur getArticleIdByDesignation: " + e.getMessage());
+            log.error("❌ Erreur getArticleIdByDesignation: {}", e.getMessage());
         }
         return -1;
     }
@@ -225,7 +231,7 @@ public class DatabaseManager {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getInt("stock");
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Database error", e); }
         return 0;
     }
 
@@ -241,7 +247,7 @@ public class DatabaseManager {
             pst.setString(2, designation);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur MAJ Stock: " + e.getMessage());
+            log.error("❌ Erreur MAJ Stock: {}", e.getMessage());
             return false;
         }
     }
@@ -295,7 +301,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Insertion " + type + ": " + e.getMessage());
+            log.error("Erreur Insertion {}: {}", type, e.getMessage());
             return false;
         }
     }
@@ -345,7 +351,7 @@ public class DatabaseManager {
         return -1;
 
     } catch (SQLException e) {
-        System.err.println("❌ Erreur Insertion " + type + ": " + e.getMessage());
+        log.error("Erreur Insertion {}: {}", type, e.getMessage());
         return -1;
     }
 }
@@ -358,7 +364,7 @@ public class DatabaseManager {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getInt("id");
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Database error", e); }
         return -1;
     }
 
@@ -373,7 +379,7 @@ public class DatabaseManager {
             pst.setInt(5, tva);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Insertion Détail: " + e.getMessage());
+            log.error("❌ Erreur Insertion Détail: {}", e.getMessage());
             return false;
         }
     }
@@ -397,7 +403,7 @@ public class DatabaseManager {
             pst.setInt(6, tva);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Ajout Article: " + e.getMessage());
+            log.error("❌ Erreur Ajout Article: {}", e.getMessage());
             return false;
         }
     }
@@ -415,7 +421,7 @@ public class DatabaseManager {
             pst.setInt(6, id);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Modif Article: " + e.getMessage());
+            log.error("❌ Erreur Modif Article: {}", e.getMessage());
             return false;
         }
     }
@@ -427,7 +433,7 @@ public class DatabaseManager {
             pst.setInt(1, id);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Suppr Article: " + e.getMessage());
+            log.error("❌ Erreur Suppr Article: {}", e.getMessage());
             return false;
         }
     }
@@ -448,7 +454,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération TVA: " + e.getMessage());
+            log.error("❌ Erreur récupération TVA: {}", e.getMessage());
         }
         return 0;
     }
@@ -478,7 +484,7 @@ public class DatabaseManager {
                 fournisseurs.add(affichage);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return fournisseurs;
     }
@@ -500,7 +506,7 @@ public class DatabaseManager {
                 fournisseurs.add(affichage);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return fournisseurs;
     }
@@ -523,12 +529,13 @@ public class DatabaseManager {
             pst.setString(4, telephone);
             pst.setString(5, adresse);
             
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return false;
     }
@@ -574,17 +581,18 @@ public class DatabaseManager {
                 pstmt.setString(2, infos[3]);
                 pstmt.setString(3, infos[2]);
                 
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    infos[4] = rs.getString("matricule_fiscale") != null ? rs.getString("matricule_fiscale") : "";
-                    infos[5] = rs.getString("email") != null ? rs.getString("email") : "";
-                    if (infos[1].isEmpty() && rs.getString("prenom") != null) {
-                        infos[1] = rs.getString("prenom");
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        infos[4] = rs.getString("matricule_fiscale") != null ? rs.getString("matricule_fiscale") : "";
+                        infos[5] = rs.getString("email") != null ? rs.getString("email") : "";
+                        if (infos[1].isEmpty() && rs.getString("prenom") != null) {
+                            infos[1] = rs.getString("prenom");
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         
         return infos;
@@ -612,7 +620,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         
         String sql2 = "SELECT nom, prenom, adresse, telephone, matricule_fiscale, email FROM Fournisseurs WHERE nom LIKE ?";
@@ -633,7 +641,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return infos;
     }
@@ -652,7 +660,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur ID Fournisseur: " + e.getMessage());
+            log.error("❌ Erreur ID Fournisseur: {}", e.getMessage());
         }
         return -1;
     }
@@ -674,7 +682,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur insertion fournisseur: " + e.getMessage());
+            log.error("❌ Erreur insertion fournisseur: {}", e.getMessage());
             return false;
         }
     }
@@ -718,7 +726,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Insertion Bon de Commande: " + e.getMessage());
+            log.error("❌ Erreur Insertion Bon de Commande: {}", e.getMessage());
             return false;
         }
     }
@@ -732,7 +740,7 @@ public class DatabaseManager {
                 if (rs.next()) return rs.getInt("id");
             }
         } catch (SQLException e) { 
-            e.printStackTrace(); 
+            log.error("Database error", e); 
         }
         return -1;
     }
@@ -750,7 +758,7 @@ public class DatabaseManager {
             pst.setDouble(6, totalLigne);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur Insertion Détail Bon Commande: " + e.getMessage());
+            log.error("❌ Erreur Insertion Détail Bon Commande: {}", e.getMessage());
             return false;
         }
     }
@@ -770,7 +778,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return articles;
     }
@@ -791,7 +799,7 @@ public class DatabaseManager {
                 articlesManquants.add(rs.getString("designation"));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return articlesManquants;
     }
@@ -809,7 +817,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Database error", e);
         }
         return articlesFaibles;
     }
@@ -826,7 +834,7 @@ public class DatabaseManager {
             pst.setString(2, designation);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur augmentation stock: " + e.getMessage());
+            log.error("❌ Erreur augmentation stock: {}", e.getMessage());
             return false;
         }
     }
@@ -839,7 +847,7 @@ public class DatabaseManager {
             pst.setString(2, numeroBonCommande);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur mise à jour statut: " + e.getMessage());
+            log.error("❌ Erreur mise à jour statut: {}", e.getMessage());
             return false;
         }
     }
@@ -858,7 +866,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            System.err.println("❌ Erreur ajout voiture: " + e.getMessage());
+            log.error("❌ Erreur ajout voiture: {}", e.getMessage());
             return false;
         }
     }
@@ -880,7 +888,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur ajout voiture avec retour ID: " + e.getMessage());
+            log.error("❌ Erreur ajout voiture avec retour ID: {}", e.getMessage());
         }
         return -1;
     }
@@ -898,7 +906,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur vérification matricule: " + e.getMessage());
+            log.error("❌ Erreur vérification matricule: {}", e.getMessage());
         }
         return false;
     }
@@ -916,7 +924,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération ID voiture: " + e.getMessage());
+            log.error("❌ Erreur récupération ID voiture: {}", e.getMessage());
         }
         return -1;
     }
@@ -934,7 +942,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération matricule: " + e.getMessage());
+            log.error("❌ Erreur récupération matricule: {}", e.getMessage());
         }
         return null;
     }
@@ -952,7 +960,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération date création: " + e.getMessage());
+            log.error("❌ Erreur récupération date création: {}", e.getMessage());
         }
         return null;
     }
@@ -969,7 +977,7 @@ public class DatabaseManager {
                 voitures.add(rs.getString("matricule"));
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur chargement voitures: " + e.getMessage());
+            log.error("❌ Erreur chargement voitures: {}", e.getMessage());
         }
         return voitures;
     }
@@ -990,7 +998,7 @@ public class DatabaseManager {
                 voitures.add(voiture);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération voitures: " + e.getMessage());
+            log.error("❌ Erreur récupération voitures: {}", e.getMessage());
         }
         return voitures;
     }
@@ -1004,7 +1012,7 @@ public class DatabaseManager {
                 checkPst.setInt(1, id);
                 try (ResultSet rs = checkPst.executeQuery()) {
                     if (rs.next() && rs.getInt(1) > 0) {
-                        System.err.println("❌ Impossible de supprimer: voiture associée à des clients");
+                        log.error("❌ Impossible de supprimer: voiture associée à des clients");
                         return false;
                     }
                 }
@@ -1015,7 +1023,7 @@ public class DatabaseManager {
                 return deletePst.executeUpdate() > 0;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur suppression voiture: " + e.getMessage());
+            log.error("❌ Erreur suppression voiture: {}", e.getMessage());
         }
         return false;
     }
@@ -1035,7 +1043,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur association client-voiture: " + e.getMessage());
+            log.error("❌ Erreur association client-voiture: {}", e.getMessage());
             return false;
         }
     }
@@ -1057,7 +1065,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération voitures du client: " + e.getMessage());
+            log.error("❌ Erreur récupération voitures du client: {}", e.getMessage());
         }
         return voitures;
     }
@@ -1076,7 +1084,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération IDs voitures du client: " + e.getMessage());
+            log.error("❌ Erreur récupération IDs voitures du client: {}", e.getMessage());
         }
         return voituresIds;
     }
@@ -1096,7 +1104,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération voiture active: " + e.getMessage());
+            log.error("❌ Erreur récupération voiture active: {}", e.getMessage());
         }
         return null;
     }
@@ -1112,7 +1120,7 @@ public class DatabaseManager {
             pst.setInt(2, voitureId);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur désactivation association: " + e.getMessage());
+            log.error("❌ Erreur désactivation association: {}", e.getMessage());
             return false;
         }
     }
@@ -1128,7 +1136,7 @@ public class DatabaseManager {
             pst.executeUpdate();
             return true;
         } catch (SQLException e) {
-            System.err.println("❌ Erreur désactivation toutes voitures: " + e.getMessage());
+            log.error("❌ Erreur désactivation toutes voitures: {}", e.getMessage());
             return false;
         }
     }
@@ -1144,11 +1152,11 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
             
             int lignesSupprimees = stmt.executeUpdate(sql);
-            System.out.println("✅ Historique des entrées vidé : " + lignesSupprimees + " lignes supprimées");
+            log.info("✅ Historique des entrées vidé :  {}", lignesSupprimees + " lignes supprimées");
             return true;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors du vidage: " + e.getMessage());
+            log.error("❌ Erreur lors du vidage: {}", e.getMessage());
             return false;
         }
     }
@@ -1160,11 +1168,11 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
             
             int lignesSupprimees = stmt.executeUpdate(sql);
-            System.out.println("✅ Historique des sorties vidé : " + lignesSupprimees + " lignes supprimées");
+            log.info("✅ Historique des sorties vidé :  {}", lignesSupprimees + " lignes supprimées");
             return true;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur lors du vidage: " + e.getMessage());
+            log.error("❌ Erreur lors du vidage: {}", e.getMessage());
             return false;
         }
     }
@@ -1186,7 +1194,7 @@ public class DatabaseManager {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur comptage: " + e.getMessage());
+            log.error("❌ Erreur comptage: {}", e.getMessage());
         }
         return -1;
     }
@@ -1202,7 +1210,7 @@ public class DatabaseManager {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur comptage: " + e.getMessage());
+            log.error("❌ Erreur comptage: {}", e.getMessage());
         }
         return -1;
     }
@@ -1233,7 +1241,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération fournisseur: " + e.getMessage());
+            log.error("❌ Erreur récupération fournisseur: {}", e.getMessage());
         }
         return null;
     }
@@ -1260,7 +1268,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération fournisseur: " + e.getMessage());
+            log.error("❌ Erreur récupération fournisseur: {}", e.getMessage());
         }
         return null;
     }
@@ -1283,7 +1291,7 @@ public class DatabaseManager {
                 fournisseurs.add(fournisseur);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur chargement fournisseurs: " + e.getMessage());
+            log.error("❌ Erreur chargement fournisseurs: {}", e.getMessage());
         }
         return fournisseurs;
     }
@@ -1324,7 +1332,7 @@ public class DatabaseManager {
         return -1;
 
     } catch (SQLException e) {
-        System.err.println("❌ Erreur insertion facture achat: " + e.getMessage());
+        log.error("❌ Erreur insertion facture achat: {}", e.getMessage());
         return -1;
     }
 }
@@ -1354,7 +1362,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur insertion détail facture achat: " + e.getMessage());
+            log.error("❌ Erreur insertion détail facture achat: {}", e.getMessage());
             return false;
         }
     }
@@ -1389,7 +1397,7 @@ public class DatabaseManager {
                 factures.add(facture);
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération factures achat: " + e.getMessage());
+            log.error("❌ Erreur récupération factures achat: {}", e.getMessage());
         }
         return factures;
     }
@@ -1416,7 +1424,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération détails: " + e.getMessage());
+            log.error("❌ Erreur récupération détails: {}", e.getMessage());
         }
         return details;
     }
@@ -1432,7 +1440,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur mise à jour statut: " + e.getMessage());
+            log.error("❌ Erreur mise à jour statut: {}", e.getMessage());
             return false;
         }
     }
@@ -1446,7 +1454,7 @@ public class DatabaseManager {
                 checkPst.setInt(1, factureAchatId);
                 try (ResultSet rs = checkPst.executeQuery()) {
                     if (rs.next() && "PAYEE".equals(rs.getString("statut"))) {
-                        System.err.println("❌ Impossible de supprimer une facture déjà payée");
+                        log.error("❌ Impossible de supprimer une facture déjà payée");
                         return false;
                     }
                 }
@@ -1457,7 +1465,7 @@ public class DatabaseManager {
                 return deletePst.executeUpdate() > 0;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur suppression: " + e.getMessage());
+            log.error("❌ Erreur suppression: {}", e.getMessage());
         }
         return false;
     }
@@ -1475,7 +1483,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur calcul total achats: " + e.getMessage());
+            log.error("❌ Erreur calcul total achats: {}", e.getMessage());
         }
         return 0.0;
     }
@@ -1495,7 +1503,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur calcul total retenues: " + e.getMessage());
+            log.error("❌ Erreur calcul total retenues: {}", e.getMessage());
         }
         return 0.0;
     }
@@ -1511,7 +1519,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur ajout stock: " + e.getMessage());
+            log.error("❌ Erreur ajout stock: {}", e.getMessage());
             return false;
         }
     }
@@ -1534,7 +1542,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur enregistrement mouvement: " + e.getMessage());
+            log.error("❌ Erreur enregistrement mouvement: {}", e.getMessage());
             return false;
         }
     }
@@ -1562,7 +1570,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur récupération mouvements: " + e.getMessage());
+            log.error("❌ Erreur récupération mouvements: {}", e.getMessage());
         }
         return mouvements;
     }
@@ -1585,7 +1593,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur vérification fournisseur: " + e.getMessage());
+            log.error("❌ Erreur vérification fournisseur: {}", e.getMessage());
         }
         return false;
     }
@@ -1601,7 +1609,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            System.err.println("❌ Erreur mise à jour taux retenue: " + e.getMessage());
+            log.error("❌ Erreur mise à jour taux retenue: {}", e.getMessage());
         }
         return false;
     }
@@ -1609,7 +1617,7 @@ public class DatabaseManager {
         // 1. Récupérer l'ID de l'article
         int articleId = getArticleIdByDesignation(designation);
         if (articleId == -1) {
-            System.err.println("❌ Article non trouvé pour la sortie: " + designation);
+            log.error("Article non trouvé pour la sortie: {}", designation);
             return false;
         }
  
@@ -1626,7 +1634,7 @@ public class DatabaseManager {
             return pst.executeUpdate() > 0;
  
         } catch (SQLException e) {
-            System.err.println("❌ Erreur enregistrement sortie: " + e.getMessage());
+            log.error("❌ Erreur enregistrement sortie: {}", e.getMessage());
             return false;
         }
     }
@@ -1652,7 +1660,7 @@ public class DatabaseManager {
                     int articleId = getArticleIdByDesignation(designation);
  
                     if (articleId == -1) {
-                        System.err.println("⚠️ Article ignoré (non trouvé en base): " + designation);
+                        log.warn("Article ignoré (non trouvé en base): {}", designation);
                         continue;
                     }
  
@@ -1664,16 +1672,16 @@ public class DatabaseManager {
                 }
                 pst.executeBatch();
                 conn.commit();
-                System.out.println("✅ Sorties historique enregistrées pour: " + numeroDoc);
+                log.info("✅ Sorties historique enregistrées pour:  {}", numeroDoc);
                 return true;
  
             } catch (SQLException e) {
                 conn.rollback();
-                System.err.println("❌ Erreur batch sorties: " + e.getMessage());
+                log.error("❌ Erreur batch sorties: {}", e.getMessage());
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Erreur connexion batch: " + e.getMessage());
+            log.error("❌ Erreur connexion batch: {}", e.getMessage());
             return false;
         }
     }

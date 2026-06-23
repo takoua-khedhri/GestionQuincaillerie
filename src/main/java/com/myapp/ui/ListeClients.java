@@ -1,6 +1,9 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.util.AppTheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -48,6 +51,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 public class ListeClients extends JFrame {
+   private static final Logger log = LoggerFactory.getLogger(ListeClients.class);
    private JTable tableClients;
    private DefaultTableModel model;
    private JButton btnAjouter;
@@ -75,11 +79,12 @@ public class ListeClients extends JFrame {
    public ListeClients() {
       // 1. Chargement Police
       this.loadFontAwesome();
-       
+
       this.setTitle("Liste des Clients");
       this.setExtendedState(JFrame.MAXIMIZED_BOTH);
       this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       this.setLocationRelativeTo(null);
+      this.setMinimumSize(new Dimension(900, 600));
       this.setLayout(new BorderLayout(10, 10));
       
       this.initUI();
@@ -87,20 +92,17 @@ public class ListeClients extends JFrame {
    }
 
    private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
    }
@@ -437,7 +439,7 @@ public class ListeClients extends JFrame {
          this.clientsFidelises = fideles;
          
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Erreur lors du calcul des statistiques clients", e);
          // Fallback aux valeurs simulées en cas d'erreur
          this.clientsActifs = (int)((double)this.totalClients * 0.65D);
          this.clientsSansAchats = this.totalClients - this.clientsActifs;
@@ -671,7 +673,7 @@ public class ListeClients extends JFrame {
          this.calculerStatistiques();
          
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Erreur lors du chargement des clients", e);
          this.lblStatut.setText("✗ Erreur lors du chargement des clients");
          this.lblStatut.setForeground(Color.RED);
       }
@@ -710,13 +712,15 @@ public class ListeClients extends JFrame {
       String prenom = (String)this.model.getValueAt(modelRow, 2);
       String nomComplet = nom + " " + prenom;
       
-      int result = JOptionPane.showConfirmDialog(this, 
-         "Supprimer définitivement le client " + nomComplet + " ?\nCette action est irréversible.", 
-         "Confirmation de suppression", 
+      Object[] options = {"Oui", "Non"};
+      int result = JOptionPane.showOptionDialog(this,
+         "Supprimer définitivement le client " + nomComplet + " ?\nCette action est irréversible.",
+         "Confirmation de suppression",
          JOptionPane.YES_NO_OPTION,
-         JOptionPane.WARNING_MESSAGE);
-         
-      if (result == JOptionPane.YES_OPTION) {
+         JOptionPane.WARNING_MESSAGE,
+         null, options, options[1]);
+
+      if (result == 0) {
          this.supprimerClientDirect(id);
       }
    }
@@ -743,9 +747,7 @@ public class ListeClients extends JFrame {
 
    public static void main(String[] args) {
       SwingUtilities.invokeLater(() -> {
-         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-         } catch (Exception e) {}
+         AppTheme.init();
          (new ListeClients()).setVisible(true);
       });
    }

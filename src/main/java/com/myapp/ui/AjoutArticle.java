@@ -1,6 +1,9 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.util.AppTheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -40,6 +43,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 public class AjoutArticle extends JFrame {
+    private static final Logger log = LoggerFactory.getLogger(AjoutArticle.class);
 
     // Composants du formulaire
     private JTextField txtCode;
@@ -85,20 +89,17 @@ public class AjoutArticle extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -640,7 +641,7 @@ public class AjoutArticle extends JFrame {
                 if (rs.next()) return rs.getInt(1) == 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la vérification de l'unicité du code", e);
         }
         return true;
     }
@@ -654,7 +655,7 @@ public class AjoutArticle extends JFrame {
                 if (rs.next()) return rs.getInt(1) == 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la vérification de l'unicité de la désignation", e);
         }
         return true;
     }
@@ -682,7 +683,7 @@ public class AjoutArticle extends JFrame {
             this.ouvrirGestionStock();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'ajout de l'article", e);
             JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout de l'article: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -690,12 +691,12 @@ public class AjoutArticle extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                AppTheme.init();
                 System.setProperty("awt.useSystemAAFontSettings", "on");
                 System.setProperty("swing.aatext", "true");
                 new AjoutArticle();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors du démarrage de l'application", e);
             }
         });
     }

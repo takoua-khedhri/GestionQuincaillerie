@@ -1,6 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -45,6 +47,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 public class GestionSortiesUI extends JFrame {
+    private static final Logger log = LoggerFactory.getLogger(GestionSortiesUI.class);
 
     private JTable tableArticles;
     private DefaultTableModel model;
@@ -80,17 +83,16 @@ public class GestionSortiesUI extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf");
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 this.fontAwesomeSolid = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(Font.PLAIN, 14);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(this.fontAwesomeSolid);
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
             }
         } catch (IOException | FontFormatException e) {
+            log.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
         }
     }
@@ -453,7 +455,7 @@ public class GestionSortiesUI extends JFrame {
                 });
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors du chargement des articles", e);
             JOptionPane.showMessageDialog(this, "Erreur lors du chargement: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -512,9 +514,7 @@ public class GestionSortiesUI extends JFrame {
      * Le champ numero_fact est défini à "Manuelle"
      */
     private void enregistrerSortie(int articleId, String designation, int quantite) {
-        Connection conn = null;
-        try {
-            conn = ConnexionSQLite.getConnection();
+        try (Connection conn = ConnexionSQLite.getConnection()) {
             conn.setAutoCommit(false);
  
             // 1. Mettre à jour le stock
@@ -552,14 +552,9 @@ public class GestionSortiesUI extends JFrame {
                 " Succès : " + designation + " (-" + quantite + ") à " + dateStr + " - Manuelle"));
  
         } catch (SQLException e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            log.error("Erreur lors de l'enregistrement de la sortie", e);
             JOptionPane.showMessageDialog(this, "Erreur transaction: " + e.getMessage(),
                                           "Erreur", JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try {
-                if (conn != null) { conn.setAutoCommit(true); conn.close(); }
-            } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
@@ -569,7 +564,7 @@ public class GestionSortiesUI extends JFrame {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 new GestionSortiesUI();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors du démarrage de l'application", e);
             }
         });
     }

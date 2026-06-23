@@ -1,6 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -45,6 +47,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 public class GestionEntreesUI extends JFrame {
+    private static final Logger log = LoggerFactory.getLogger(GestionEntreesUI.class);
 
     private JTable tableArticles;
     private DefaultTableModel model;
@@ -76,18 +79,16 @@ public class GestionEntreesUI extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            // Assurez-vous que le chemin vers votre police est correct
-            InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf");
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 this.fontAwesomeSolid = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(Font.PLAIN, 14);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(this.fontAwesomeSolid);
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
             }
         } catch (IOException | FontFormatException e) {
+            log.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
         }
     }
@@ -459,7 +460,7 @@ public class GestionEntreesUI extends JFrame {
                 });
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors du chargement des articles", e);
             JOptionPane.showMessageDialog(this, "Erreur chargement articles: " + e.getMessage(), "Erreur BDD", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -509,10 +510,8 @@ public class GestionEntreesUI extends JFrame {
     }
 
     private void enregistrerEntree(int articleId, String designation, int quantite) {
-        Connection conn = null;
-        try {
-            conn = ConnexionSQLite.getConnection();
-            conn.setAutoCommit(false); 
+        try (Connection conn = ConnexionSQLite.getConnection()) {
+            conn.setAutoCommit(false);
 
             // 1. Update Stock
             String updateStock = "UPDATE Articles SET stock = stock + ? WHERE id = ?";
@@ -548,11 +547,8 @@ public class GestionEntreesUI extends JFrame {
             this.lblStatut.setText(getHtmlText("\uf058", " Succès : " + designation + " (+" + quantite + ") à " + dateStr));
 
         } catch (SQLException e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            log.error("Erreur lors de l'enregistrement de l'entrée", e);
             JOptionPane.showMessageDialog(this, "Erreur transaction: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-        } finally {
-            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
@@ -562,7 +558,7 @@ public class GestionEntreesUI extends JFrame {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 new GestionEntreesUI();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors du démarrage de l'application", e);
             }
         });
     }

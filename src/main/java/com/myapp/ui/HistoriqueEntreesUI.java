@@ -645,7 +645,8 @@ public class HistoriqueEntreesUI extends JFrame {
      * Vide définitivement l'historique des entrées (suppression physique en base de données)
      */
     private void viderHistorique() {
-        int confirm = JOptionPane.showConfirmDialog(this,
+        Object[] options = {"Oui", "Non"};
+        int confirm = JOptionPane.showOptionDialog(this,
                 "<html><body style='text-align:center;'>" +
                 "<h2>⚠️ Confirmation de suppression définitive ⚠️</h2>" +
                 "<p style='font-size:14px;'>Êtes-vous sûr de vouloir vider TOUT l'historique des entrées ?</p>" +
@@ -654,19 +655,22 @@ public class HistoriqueEntreesUI extends JFrame {
                 "</body></html>",
                 "Vider l'historique - Confirmation",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+                JOptionPane.WARNING_MESSAGE,
+                null, options, options[1]);
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (confirm == 0) {
             // Deuxième confirmation pour éviter les erreurs
-            int confirm2 = JOptionPane.showConfirmDialog(this,
+            Object[] options2 = {"Oui", "Non"};
+            int confirm2 = JOptionPane.showOptionDialog(this,
                     "⚠️ DERNIER AVERTISSEMENT ⚠️\n\n" +
                     "Cette action supprimera DÉFINITIVEMENT toutes les lignes d'historique.\n\n" +
                     "Voulez-vous vraiment continuer ?",
                     "Confirmation finale",
                     JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-            
-            if (confirm2 == JOptionPane.YES_OPTION) {
+                    JOptionPane.WARNING_MESSAGE,
+                    null, options2, options2[1]);
+
+            if (confirm2 == 0) {
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                     @Override
                     protected Void doInBackground() throws Exception {

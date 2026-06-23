@@ -1,6 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -24,6 +26,7 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
 public class SupprimerArticleUI extends JDialog {
+   private static final Logger log = LoggerFactory.getLogger(SupprimerArticleUI.class);
    private int articleId;
    private String designation;
    private GestionStock parent;
@@ -43,20 +46,17 @@ public class SupprimerArticleUI extends JDialog {
    }
 
    private void loadFontAwesome() {
-      try {
-         String path = "/fonts/fa.ttf";
-         InputStream fontStream = this.getClass().getResourceAsStream(path);
+      try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
          if (fontStream != null) {
             Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(font);
             this.fontAwesomeSolid = font;
-            fontStream.close();
          } else {
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
          }
       } catch (Exception e) {
-         e.printStackTrace();
+         log.error("Erreur lors du chargement de FontAwesome", e);
          this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
       }
    }
@@ -180,7 +180,7 @@ public class SupprimerArticleUI extends JDialog {
             return rs.getInt("stock");
          }
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Erreur lors de la récupération du stock actuel", e);
       }
       return 0;
    }
@@ -233,7 +233,7 @@ public class SupprimerArticleUI extends JDialog {
                JOptionPane.showMessageDialog(this, "Erreur: Article non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
          } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la suppression de l'article", e);
             JOptionPane.showMessageDialog(this, "Erreur SQL: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
          }
       }

@@ -13,8 +13,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModifierAchatDialog extends JDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(ModifierAchatDialog.class);
     
     private JComboBox<String> comboStatut;
     private int factureId;
@@ -51,9 +55,9 @@ public class ModifierAchatDialog extends JDialog {
                 comboStatut.setSelectedItem(statutActuel);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error loading current status for factureId={}", factureId, e);
         }
-        
+
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton btnEnregistrer = new JButton("Enregistrer");
         JButton btnAnnuler = new JButton("Annuler");
@@ -91,7 +95,7 @@ public class ModifierAchatDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "❌ Aucune modification effectuée", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error updating status for factureId={}", factureId, e);
             JOptionPane.showMessageDialog(this, "Erreur: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -18,8 +18,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DetailsAchatDialog extends JDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(DetailsAchatDialog.class);
     
     private DecimalFormat df;
     
@@ -67,7 +71,7 @@ public class DetailsAchatDialog extends JDialog {
                 infoPanel.add(new JLabel(rs.getString("statut")));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error loading achat details for factureId={}", factureId, e);
         }
         
         // Table des articles
@@ -96,7 +100,7 @@ public class DetailsAchatDialog extends JDialog {
                 model.addRow(row);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error loading achat details for factureId={}", factureId, e);
         }
         
         JTable table = new JTable(model);

@@ -1,6 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.db.GestionBackup;
+import com.myapp.util.AppTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -43,8 +45,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GestionStock extends JFrame {
+   private static final Logger log = LoggerFactory.getLogger(GestionStock.class);
    private JTable tableArticles;
    private DefaultTableModel model;
    private JButton btnAjouter;
@@ -69,28 +74,47 @@ public class GestionStock extends JFrame {
       this.loadFontAwesome();
       this.setTitle("Gestion du Stock - Articles");
       this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-      this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       this.setLocationRelativeTo(null);
+      this.setMinimumSize(new Dimension(900, 600));
       this.setLayout(new BorderLayout(10, 10));
       this.initUI();
       this.chargerArticles();
    }
 
-   private void loadFontAwesome() {
+   @Override
+   protected void processWindowEvent(java.awt.event.WindowEvent e) {
+      if (e.getID() == java.awt.event.WindowEvent.WINDOW_CLOSING) {
+         effectuerBackupEtQuitter();
+      } else {
+         super.processWindowEvent(e);
+      }
+   }
+
+   private void effectuerBackupEtQuitter() {
+      this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
       try {
-         String path = "/fonts/fa.ttf";
-         InputStream fontStream = this.getClass().getResourceAsStream(path);
+         log.info("Fermeture : Sauvegarde en cours...");
+         GestionBackup.effectuerBackup();
+      } catch (Exception ex) {
+         log.error("Erreur lors du backup", ex);
+      } finally {
+         System.exit(0);
+      }
+   }
+
+   private void loadFontAwesome() {
+      try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
          if (fontStream != null) {
             Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(font);
             this.fontAwesomeSolid = font;
-            fontStream.close();
          } else {
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
          }
       } catch (Exception e) {
-         e.printStackTrace();
+         log.error("Impossible de charger FontAwesome", e);
          this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
       }
    }
@@ -128,11 +152,11 @@ public class GestionStock extends JFrame {
       final JButton button = new JButton(htmlContent);
       button.setFont(new Font("Segoe UI", Font.BOLD, 13));
       if (isActive) {
-         button.setBackground(new Color(41, 128, 185));
+         button.setBackground(AppTheme.PRIMARY);
          button.setForeground(Color.WHITE);
       } else {
-         button.setBackground(new Color(236, 240, 241));
-         button.setForeground(new Color(52, 73, 94));
+         button.setBackground(AppTheme.LIGHT);
+         button.setForeground(AppTheme.DOCUMENTS);
       }
       button.setFocusPainted(false);
       button.setBorderPainted(false);
@@ -143,7 +167,7 @@ public class GestionStock extends JFrame {
       hoverTimer.setRepeats(false);
       button.addMouseListener(new MouseAdapter() {
          public void mouseEntered(MouseEvent evt) { if (!isActive) { button.setBackground(new Color(220, 220, 220)); } hoverTimer.start(); }
-         public void mouseExited(MouseEvent evt) { if (!isActive) { button.setBackground(new Color(236, 240, 241)); } hoverTimer.stop(); }
+         public void mouseExited(MouseEvent evt) { if (!isActive) { button.setBackground(AppTheme.LIGHT); } hoverTimer.stop(); }
          public void mouseClicked(MouseEvent evt) { GestionStock.this.showMenuForButton(button, menuItems, menuIcons); }
       });
       return button;
@@ -203,11 +227,11 @@ public class GestionStock extends JFrame {
 
    private JPanel createNavigationBar() {
       JPanel navPanel = new JPanel(new GridLayout(1, 4));
-      navPanel.setBackground(new Color(52, 73, 94));
+      navPanel.setBackground(AppTheme.DOCUMENTS);
 
       JButton btnBack = new JButton(this.getHtmlText("\uf060", "Tableau de Bord"));
       btnBack.setFont(new Font("Segoe UI", Font.BOLD, 13));
-      btnBack.setBackground(new Color(44, 62, 80));
+      btnBack.setBackground(AppTheme.DARK);
       btnBack.setForeground(Color.WHITE);
       btnBack.setFocusPainted(false);
       btnBack.setBorderPainted(false);
@@ -336,7 +360,7 @@ public class GestionStock extends JFrame {
             BorderFactory.createTitledBorder(
                   BorderFactory.createLineBorder(new Color(220, 220, 220)),
                   " TABLEAU DE BORD DU STOCK", 1, 2,
-                  new Font("Segoe UI", Font.BOLD, 12), new Color(52, 73, 94))));
+                  new Font("Segoe UI", Font.BOLD, 12), AppTheme.DOCUMENTS)));
 
       GridBagConstraints gbc = new GridBagConstraints();
       gbc.fill = GridBagConstraints.BOTH;
@@ -346,10 +370,10 @@ public class GestionStock extends JFrame {
 
       this.calculerStatistiques();
 
-      JPanel card1 = this.createStatCard("\uf1b3", "TOTAL ARTICLES", String.valueOf(this.totalArticles), new Color(52, 152, 219, 40), new Color(41, 128, 185), "Articles en stock");
-      JPanel card2 = this.createStatCard("\uf071", "RUPTURES DE STOCK", String.valueOf(this.alertesRupture), new Color(231, 76, 60, 40), new Color(192, 57, 43), "Articles à réapprovisionner");
+      JPanel card1 = this.createStatCard("\uf1b3", "TOTAL ARTICLES", String.valueOf(this.totalArticles), new Color(52, 152, 219, 40), AppTheme.PRIMARY, "Articles en stock");
+      JPanel card2 = this.createStatCard("\uf071", "RUPTURES DE STOCK", String.valueOf(this.alertesRupture), new Color(231, 76, 60, 40), AppTheme.DANGER_DARK, "Articles à réapprovisionner");
       JPanel card3 = this.createStatCard("\uf06a", "STOCKS FAIBLES", String.valueOf(this.alertesFaible), new Color(230, 126, 34, 40), new Color(211, 84, 0), "Stock < 10");
-      JPanel card4 = this.createStatCard("\uf058", "STOCK NORMAL", String.valueOf(this.stockNormal), new Color(46, 204, 113, 40), new Color(39, 174, 96), "Stock suffisant");
+      JPanel card4 = this.createStatCard("\uf058", "STOCK NORMAL", String.valueOf(this.stockNormal), new Color(46, 204, 113, 40), AppTheme.ACCENT_DARK, "Stock suffisant");
 
       this.rendreCarteCliquable(card2, 0);
       this.rendreCarteCliquable(card3, 1);
@@ -378,14 +402,14 @@ public class GestionStock extends JFrame {
             else if (stock < 10) { ++this.alertesFaible; }
             else { ++this.stockNormal; }
          }
-      } catch (SQLException e) { e.printStackTrace(); }
+      } catch (SQLException e) { log.error("Erreur lors du calcul des statistiques", e); }
    }
 
    private void initUI() {
       JPanel navBarPanel = this.createNavigationBar();
 
       JPanel headerPanel = new JPanel(new BorderLayout());
-      headerPanel.setBackground(new Color(44, 62, 80));
+      headerPanel.setBackground(AppTheme.DARK);
       headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
       JLabel titleLabel = new JLabel(this.getHtmlText("\uf466", "GESTION DU STOCK"), JLabel.CENTER);
       titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
@@ -399,10 +423,10 @@ public class GestionStock extends JFrame {
             BorderFactory.createTitledBorder("Actions Rapides"),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)));
       mouvementsPanel.setBackground(new Color(240, 240, 240));
-      this.btnGestionEntrees   = this.createStyledButton("\uf090", "Gérer les Entrées",   new Color(46, 204, 113));
-      this.btnGestionSorties   = this.createStyledButton("\uf08b", "Gérer les Sorties",   new Color(52, 152, 219));
-      this.btnHistoriqueEntrees = this.createStyledButton("\uf1da", "Historique Entrées", new Color(155, 89, 182));
-      this.btnHistoriqueSorties = this.createStyledButton("\uf201", "Historique Sorties", new Color(231, 76, 60));
+      this.btnGestionEntrees   = this.createStyledButton("\uf090", "Gérer les Entrées",   AppTheme.ACCENT);
+      this.btnGestionSorties   = this.createStyledButton("\uf08b", "Gérer les Sorties",   AppTheme.INFO);
+      this.btnHistoriqueEntrees = this.createStyledButton("\uf1da", "Historique Entrées", AppTheme.PURPLE);
+      this.btnHistoriqueSorties = this.createStyledButton("\uf201", "Historique Sorties", AppTheme.DANGER);
       mouvementsPanel.add(this.btnGestionEntrees);
       mouvementsPanel.add(this.btnGestionSorties);
       mouvementsPanel.add(this.btnHistoriqueEntrees);
@@ -432,7 +456,7 @@ public class GestionStock extends JFrame {
          }
       });
 
-      this.btnResetFiltre = this.createStyledButton("\uf0e2", "Réinitialiser", new Color(155, 89, 182));
+      this.btnResetFiltre = this.createStyledButton("\uf0e2", "Réinitialiser", AppTheme.PURPLE);
       this.btnResetFiltre.setPreferredSize(new Dimension(140, 35));
       this.btnResetFiltre.addActionListener(e -> {
          sorter.setRowFilter(null);
@@ -458,6 +482,7 @@ public class GestionStock extends JFrame {
       this.tableArticles = new JTable(this.model);
       this.sorter = new TableRowSorter<>(this.model);
       this.tableArticles.setRowSorter(this.sorter);
+      this.tableArticles.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
       this.tableArticles.setRowHeight(35);
       this.tableArticles.setFont(new Font("Segoe UI", Font.PLAIN, 13));
       this.tableArticles.setGridColor(new Color(240, 240, 240));
@@ -478,7 +503,7 @@ public class GestionStock extends JFrame {
          public Component getTableCellRendererComponent(JTable table, Object value,
                boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            this.setBackground(new Color(52, 73, 94));
+            this.setBackground(AppTheme.DOCUMENTS);
             this.setForeground(Color.WHITE);
             this.setFont(new Font("Segoe UI", Font.BOLD, 13));
             this.setHorizontalAlignment(JLabel.CENTER);
@@ -547,9 +572,9 @@ public class GestionStock extends JFrame {
       JPanel articlesButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
       articlesButtonPanel.setBackground(new Color(250, 250, 250));
       articlesButtonPanel.setBorder(BorderFactory.createTitledBorder("Gestion des Articles"));
-      this.btnAjouter  = this.createStyledButton("\uf067", "Ajouter Article",   new Color(46, 204, 113));
-      this.btnModifier = this.createStyledButton("\uf044", "Modifier Article",  new Color(52, 152, 219));
-      this.btnSupprimer = this.createStyledButton("\uf1f8", "Supprimer Article", new Color(231, 76, 60));
+      this.btnAjouter  = this.createStyledButton("\uf067", "Ajouter Article",   AppTheme.ACCENT);
+      this.btnModifier = this.createStyledButton("\uf044", "Modifier Article",  AppTheme.INFO);
+      this.btnSupprimer = this.createStyledButton("\uf1f8", "Supprimer Article", AppTheme.DANGER);
       articlesButtonPanel.add(this.btnAjouter);
       articlesButtonPanel.add(this.btnModifier);
       articlesButtonPanel.add(this.btnSupprimer);
@@ -619,7 +644,7 @@ public class GestionStock extends JFrame {
          this.calculerStatistiques();
          this.updateDashboard();
       } catch (SQLException e) {
-         e.printStackTrace();
+         log.error("Erreur lors du chargement des articles", e);
          JOptionPane.showMessageDialog(this, "Erreur DB: " + e.getMessage());
       }
       this.tableArticles.repaint();
@@ -639,7 +664,7 @@ public class GestionStock extends JFrame {
                topPanel.revalidate();
                topPanel.repaint();
             }
-         } catch(Exception e) {}
+         } catch(Exception e) { log.error("Erreur lors de la mise à jour du tableau de bord", e); }
       });
    }
 
@@ -677,7 +702,7 @@ public class GestionStock extends JFrame {
 
    public static void main(String[] args) {
       SwingUtilities.invokeLater(() -> {
-         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
+         try { AppTheme.init(); } catch (Exception e) { log.error("Erreur lors de l'initialisation du thème", e); }
          (new GestionStock()).setVisible(true);
       });
    }

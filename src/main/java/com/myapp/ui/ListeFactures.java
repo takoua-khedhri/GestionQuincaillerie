@@ -65,8 +65,14 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import com.myapp.db.DatabaseManager;
 import com.myapp.print.BLImpression;
+import com.myapp.util.AppTheme;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListeFactures extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(ListeFactures.class);
 
     private JTable tableFactures;
     private DefaultTableModel model;
@@ -104,19 +110,19 @@ public class ListeFactures extends JFrame {
 
     private void loadFontAwesome() {
         try {
-            String path = "/fonts/fa.ttf"; 
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
-            if (fontStream != null) {
-                Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
-                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-                ge.registerFont(font);
-                this.fontAwesomeSolid = font;
-                fontStream.close();
-            } else {
-                this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
+            String path = "/fonts/fa.ttf";
+            try (InputStream fontStream = this.getClass().getResourceAsStream(path)) {
+                if (fontStream != null) {
+                    Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    ge.registerFont(font);
+                    this.fontAwesomeSolid = font;
+                } else {
+                    this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
+                }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to load FontAwesome font", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -216,17 +222,17 @@ public class ListeFactures extends JFrame {
     }
 
     // Méthodes de navigation
-    private void ouvrirNouveauClient() { try { (new AjouterClient(null)).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirListeClients() { try { (new ListeClients()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirFacture() { try { (new FactureUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirBonLivraison() { try { (new BLUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirBonSortie() { try { (new BonSortieUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirDevis() { try { (new DevisUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirGestionStock() { try { (new GestionStock()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirGestionEntrees() { try { (new GestionEntreesUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirGestionSorties() { try { (new GestionSortiesUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirHistoriqueEntrees() { try { (new HistoriqueEntreesUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
-    private void ouvrirHistoriqueSorties() { try { (new HistoriqueSortiesUI()).setVisible(true); this.dispose(); } catch (Exception e) {} }
+    private void ouvrirNouveauClient() { try { (new AjouterClient(null)).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open AjouterClient", e); } }
+    private void ouvrirListeClients() { try { (new ListeClients()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open ListeClients", e); } }
+    private void ouvrirFacture() { try { (new FactureUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open FactureUI", e); } }
+    private void ouvrirBonLivraison() { try { (new BLUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open BLUI", e); } }
+    private void ouvrirBonSortie() { try { (new BonSortieUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open BonSortieUI", e); } }
+    private void ouvrirDevis() { try { (new DevisUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open DevisUI", e); } }
+    private void ouvrirGestionStock() { try { (new GestionStock()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open GestionStock", e); } }
+    private void ouvrirGestionEntrees() { try { (new GestionEntreesUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open GestionEntreesUI", e); } }
+    private void ouvrirGestionSorties() { try { (new GestionSortiesUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open GestionSortiesUI", e); } }
+    private void ouvrirHistoriqueEntrees() { try { (new HistoriqueEntreesUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open HistoriqueEntreesUI", e); } }
+    private void ouvrirHistoriqueSorties() { try { (new HistoriqueSortiesUI()).setVisible(true); this.dispose(); } catch (Exception e) { log.error("Failed to open HistoriqueSortiesUI", e); } }
 
     private JPanel createNavigationBar() {
         JPanel navPanel = new JPanel(new GridLayout(1, 4));
@@ -241,7 +247,7 @@ public class ListeFactures extends JFrame {
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBack.addActionListener(e -> {
             this.dispose();
-            try { new AdminDashboard().setVisible(true); } catch(Exception ex) {}
+            try { new AdminDashboard().setVisible(true); } catch(Exception ex) { log.error("Failed to open AdminDashboard", ex); }
         });
         navPanel.add(btnBack);
 
@@ -593,7 +599,7 @@ public class ListeFactures extends JFrame {
             if (parts.length == 3) {
                 return parts[2] + "-" + parts[1] + "-" + parts[0];
             }
-        } catch (Exception e) {}
+        } catch (Exception e) { log.error("Failed to convert date to SQL format", e); }
         return null;
     }
 
@@ -700,7 +706,7 @@ public class ListeFactures extends JFrame {
             JOptionPane.showMessageDialog(this,
                 "Erreur lors de la recherche: " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            log.error("Error searching documents", e);
         }
     }
 
@@ -749,7 +755,7 @@ public class ListeFactures extends JFrame {
                 count++;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error loading documents list", e);
         } finally {
             isLoading = false;
         }
@@ -761,7 +767,7 @@ public class ListeFactures extends JFrame {
                 LocalDate localDate = LocalDate.parse(date);
                 return localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) { log.error("Failed to format date: {}", date, e); }
         return date;
     }
 
@@ -815,11 +821,13 @@ public class ListeFactures extends JFrame {
         String numeroDocument = this.model.getValueAt(row, 0).toString();
         String typeDocument = this.model.getValueAt(row, 1).toString();
         
-        int confirmation = JOptionPane.showConfirmDialog(this, 
-            "Êtes-vous sûr de vouloir supprimer le document " + typeDocument + " N° " + numeroDocument + " ?\nCette action est irréversible et supprimera également tous les articles associés.", 
-            "Confirmation de suppression", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        Object[] options = {"Oui", "Non"};
+        int confirmation = JOptionPane.showOptionDialog(this,
+            "Êtes-vous sûr de vouloir supprimer le document " + typeDocument + " N° " + numeroDocument + " ?\nCette action est irréversible et supprimera également tous les articles associés.",
+            "Confirmation de suppression", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
+            null, options, options[1]);
 
-        if (confirmation == JOptionPane.YES_OPTION) {
+        if (confirmation == 0) {
             if (supprimerDocumentAvecCascade(factureId)) {
                 JOptionPane.showMessageDialog(this, "✅ Document " + numeroDocument + " supprimé avec succès!", "Succès", JOptionPane.INFORMATION_MESSAGE);
                 this.chargerFactures();
@@ -1295,7 +1303,7 @@ public class ListeFactures extends JFrame {
             if (logoFile.exists()) {
                 return new ImageIcon(new ImageIcon(logoFile.getAbsolutePath()).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) { log.error("Failed to load logo image", e); }
         return null;
     }
     

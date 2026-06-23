@@ -1,6 +1,8 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -36,6 +38,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 public class ModifierArticleUI extends JDialog {
+    private static final Logger log = LoggerFactory.getLogger(ModifierArticleUI.class);
 
     // Composants
     private JTextField txtDesignation;
@@ -80,17 +83,16 @@ public class ModifierArticleUI extends JDialog {
     // FONT AWESOME
     // =========================================================================
     private void loadFontAwesome() {
-        try {
-            InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf");
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);
                 this.fontAwesomeSolid = font.deriveFont(Font.PLAIN, 14f);
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
             }
         } catch (IOException | FontFormatException e) {
+            log.error("Erreur lors du chargement de FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 14);
         }
     }
@@ -407,7 +409,7 @@ public class ModifierArticleUI extends JDialog {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getDouble("prix_detail");
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la récupération du prix détail", e); }
         return 0.0;
     }
 
@@ -506,7 +508,7 @@ public class ModifierArticleUI extends JDialog {
             try (ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) == 0;
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la vérification de la désignation", e); }
         return true;
     }
 
@@ -532,7 +534,7 @@ public class ModifierArticleUI extends JDialog {
                 this.dispose();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'enregistrement de la modification", e);
             JOptionPane.showMessageDialog(this,
                 "Erreur base de données: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }

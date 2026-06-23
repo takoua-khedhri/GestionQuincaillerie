@@ -21,8 +21,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LogoutUI extends JDialog {
+   private static final Logger log = LoggerFactory.getLogger(LogoutUI.class);
    private JButton btnConfirmLogout;
    private JButton btnCancel;
    private boolean logoutConfirmed = false;

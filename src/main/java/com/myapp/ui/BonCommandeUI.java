@@ -4,6 +4,7 @@ import com.myapp.db.DatabaseManager;
 import com.myapp.logic.BonCommandeManager;
 import com.myapp.logic.BonCommandeManager.CalculTotaux;
 import com.myapp.print.BonCommandeImpression;
+import com.myapp.util.AppTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -61,7 +62,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.text.JTextComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BonCommandeUI extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(BonCommandeUI.class);
 
     // Composants principaux
     private JComboBox<String> comboFournisseurs;
@@ -119,7 +125,7 @@ public class BonCommandeUI extends JFrame {
         df = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.FRANCE));
         df3 = new DecimalFormat("#,##0.000", new DecimalFormatSymbols(Locale.FRANCE));
         
-        System.out.println("🚀 Initialisation de BonCommandeUI");
+        log.info("Initialisation de BonCommandeUI");
         this.setupManagers();
         this.initializeUI();
         this.loadData();
@@ -134,7 +140,7 @@ public class BonCommandeUI extends JFrame {
         mainContainer.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         this.chargerLogo();
-        this.applyModernLook();
+        AppTheme.init();
         
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.add(this.createHeaderPanel(), BorderLayout.NORTH);
@@ -213,7 +219,7 @@ public class BonCommandeUI extends JFrame {
             this.calculerEtAfficherTotaux();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de la mise à jour de la ligne", e);
         } finally {
             this.miseAJourEnCours = false;
         }
@@ -422,13 +428,13 @@ public class BonCommandeUI extends JFrame {
         
         this.radioPrixGros.addActionListener((e) -> {
             modePrixGros = true;
-            System.out.println("Mode prix: GROS");
+            log.info("Mode prix: GROS");
             afficherPrixArticle();
         });
         
         this.radioPrixDetail.addActionListener((e) -> {
             modePrixGros = false;
-            System.out.println("Mode prix: DÉTAIL");
+            log.info("Mode prix: DÉTAIL");
             afficherPrixArticle();
         });
         
@@ -778,10 +784,10 @@ public class BonCommandeUI extends JFrame {
             
             if (modePrixGros) {
                 prix = DatabaseManager.getPrixGrosArticle(article);
-                System.out.println("Prix Gros pour " + article + ": " + prix);
+                log.info("Prix Gros pour {} : {}", article, prix);
             } else {
                 prix = DatabaseManager.getPrixDetailArticle(article);
-                System.out.println("Prix Détail pour " + article + ": " + prix);
+                log.info("Prix Détail pour {} : {}", article, prix);
             }
             
             this.txtPrixAchat.setText(formatMontantDinar(prix));
@@ -848,7 +854,7 @@ public class BonCommandeUI extends JFrame {
             
             prix = Double.parseDouble(prixStr.replace(",", "."));
 
-            System.out.println("Ajout de " + article + " - Quantité: " + qte + " - Prix achat: " + prix + " (Mode: " + (modePrixGros ? "GROS" : "DÉTAIL") + ")");
+            log.info("Ajout de {} - Quantité: {} - Prix achat: {} (Mode: {})", article, qte, prix, modePrixGros ? "GROS" : "DÉTAIL");
 
             this.bonCommandeManager.ajouterArticle(article, qte, prix);
             this.calculerEtAfficherTotaux();
@@ -862,7 +868,7 @@ public class BonCommandeUI extends JFrame {
                 "Erreur de saisie",
                 JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
-            // Ignorer les autres erreurs
+            log.debug("Erreur inattendue lors de l'ajout d'article", e);
         }
     }
 
@@ -961,7 +967,9 @@ public class BonCommandeUI extends JFrame {
             );
             impression.imprimer();
             this.viderBonCommande();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            log.error("Erreur lors de la génération du bon de commande", e);
+        }
     }
 
     /**
@@ -994,10 +1002,10 @@ public class BonCommandeUI extends JFrame {
             if (f.exists()) {
                 this.logoIcon = new ImageIcon(new ImageIcon(f.getAbsolutePath()).getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH));
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Erreur lors du chargement du logo", e);
+        }
     }
-
-    private void applyModernLook() { try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {} }
 
     private void genererNumeroBonCommande() {
         String num = "BC-" + LocalDate.now().getYear() + "-" + String.format("%04d", (int)(Math.random() * 10000));

@@ -18,8 +18,12 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BLImpression implements Printable {
+
+    private static final Logger log = LoggerFactory.getLogger(BLImpression.class);
 
     private String numeroBL;
     private String dateBL;
@@ -149,7 +153,7 @@ public class BLImpression implements Printable {
             y += 10;
             printFooter(g2d, margin, y, contentWidth, pageFormat);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Erreur lors de l'impression du BL", e);
             throw new PrinterException("Erreur impression BL: " + e.getMessage());
         }
 
@@ -169,6 +173,7 @@ public class BLImpression implements Printable {
                 g2d.drawImage(img, margin, y, logoSize, logoSize, null);
                 logoPrinted = true;
             } catch (Exception e) {
+                log.error("Erreur lors du chargement du logo", e);
                 drawLogoPlaceholder(g2d, margin, y, logoSize);
             }
         } else {
@@ -500,7 +505,7 @@ public class BLImpression implements Printable {
                 totalRemise += remiseLigne;
 
             } catch (Exception e) {
-                System.err.println("Erreur calcul total ligne " + i + ": " + e.getMessage());
+                log.error("Erreur calcul total ligne {}: {}", i, e.getMessage());
             }
         }
 
@@ -553,7 +558,7 @@ public class BLImpression implements Printable {
         if (model.getRowCount() > 0) {
             try {
                 return model.getValueAt(0, 5).toString().replaceAll("[^0-9]", "");
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors de la lecture du taux TVA", e); }
         }
         return "19";
     }
@@ -577,7 +582,7 @@ public class BLImpression implements Printable {
             try {
                 totalTTC += Double.parseDouble(
                     model.getValueAt(i, 8).toString().replace(",", ".").replaceAll("[^0-9.-]", ""));
-            } catch (Exception e) {}
+            } catch (Exception e) { log.error("Erreur lors du calcul du total TTC pour montant en lettres", e); }
         }
 
         g2d.setColor(Color.BLACK);
@@ -723,7 +728,7 @@ public class BLImpression implements Printable {
     // LANCER IMPRESSION
     // =========================================================================
     public void imprimer() throws PrinterException {
-        System.out.println("Impression BL...");
+        log.info("Impression BL...");
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("Bon de Livraison " + numeroBL);
         job.setPrintable(this);

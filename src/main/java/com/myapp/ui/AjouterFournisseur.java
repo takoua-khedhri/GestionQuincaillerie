@@ -36,8 +36,12 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AjouterFournisseur extends JFrame {
+
+    private static final Logger log = LoggerFactory.getLogger(AjouterFournisseur.class);
 
     private JTextField txtNom;
     private JTextField txtPrenom;
@@ -78,19 +82,17 @@ public class AjouterFournisseur extends JFrame {
     }
 
     private void loadFontAwesome() {
-        try {
-            String path = "/fonts/fa.ttf";
-            InputStream fontStream = this.getClass().getResourceAsStream(path);
+        try (InputStream fontStream = this.getClass().getResourceAsStream("/fonts/fa.ttf")) {
             if (fontStream != null) {
                 Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(font);
                 this.fontAwesomeSolid = font;
-                fontStream.close();
             } else {
                 this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
             }
         } catch (Exception e) {
+            log.error("Failed to load FontAwesome", e);
             this.fontAwesomeSolid = new Font("SansSerif", Font.PLAIN, 12);
         }
     }
@@ -141,7 +143,7 @@ public class AjouterFournisseur extends JFrame {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error checking if fournisseur exists", e);
         }
         return false;
     }
@@ -494,7 +496,7 @@ public class AjouterFournisseur extends JFrame {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 new AjouterFournisseur(null);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to start AjouterFournisseur", e);
             }
         });
     }
