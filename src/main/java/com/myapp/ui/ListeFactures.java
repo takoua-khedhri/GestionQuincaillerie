@@ -1190,7 +1190,7 @@ public class ListeFactures extends JFrame {
                 try {
                     Graphics2D g2d = (Graphics2D) g;
                     impression.print(g2d, new java.awt.print.PageFormat(), 0);
-                } catch(Exception e) { e.printStackTrace(); }
+                } catch(Exception e) { log.error("Error rendering invoice preview", e); }
             }
         };
         pagePanel.setPreferredSize(new Dimension(800, 1000));
@@ -1293,7 +1293,7 @@ public class ListeFactures extends JFrame {
                 imp.imprimer();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error printing existing invoice", e);
         }
     }
 
@@ -1392,9 +1392,7 @@ public class ListeFactures extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {}
+            AppTheme.init();
             new ListeFactures().setVisible(true);
         });
     }

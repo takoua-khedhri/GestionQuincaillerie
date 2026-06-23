@@ -47,6 +47,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 public class HistoriqueSortiesUI extends JFrame {
+    private static final Logger log = LoggerFactory.getLogger(HistoriqueSortiesUI.class);
 
     private JTable tableSorties;
     private DefaultTableModel model;
@@ -540,8 +541,7 @@ public class HistoriqueSortiesUI extends JFrame {
                             }
                         }
                     } catch (SQLException e) {
-                        System.err.println("Erreur SQL: " + e.getMessage());
-                        e.printStackTrace();
+                        log.error("Erreur SQL lors du chargement de l'historique des sorties", e);
                         throw e;
                     }
                     return null;
@@ -594,7 +594,7 @@ public class HistoriqueSortiesUI extends JFrame {
                         });
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Erreur lors du chargement de l'historique des sorties", e);
                         HistoriqueSortiesUI.this.lblStatut.setText("✗ Erreur lors du chargement de l'historique: " + e.getMessage());
                         HistoriqueSortiesUI.this.lblStatut.setForeground(new Color(231, 76, 60));
                         SwingUtilities.invokeLater(() -> {
@@ -699,10 +699,10 @@ public class HistoriqueSortiesUI extends JFrame {
                             JOptionPane.INFORMATION_MESSAGE);
                             
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(HistoriqueSortiesUI.this, 
-                            "❌ Erreur lors du vidage de l'historique:\n" + e.getMessage(), 
-                            "Erreur", 
+                        log.error("Erreur lors du vidage de l'historique des sorties", e);
+                        JOptionPane.showMessageDialog(HistoriqueSortiesUI.this,
+                            "Erreur lors du vidage de l'historique:\n" + e.getMessage(),
+                            "Erreur",
                             JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -733,12 +733,12 @@ public class HistoriqueSortiesUI extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                AppTheme.init();
                 System.setProperty("awt.useSystemAAFontSettings", "on");
                 System.setProperty("swing.aatext", "true");
                 new HistoriqueSortiesUI();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors du démarrage de l'application", e);
                 JOptionPane.showMessageDialog(null, "Erreur lors du démarrage de l'application: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });
