@@ -1753,9 +1753,9 @@ public class FactureUI extends JFrame {
                 "Modification", JOptionPane.INFORMATION_MESSAGE);
                 
         } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Erreur lors du chargement de la facture: " + e.getMessage(), 
+            log.error("Erreur lors du chargement de la facture pour modification", e);
+            JOptionPane.showMessageDialog(this,
+                "Erreur lors du chargement de la facture: " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
             this.dispose();
         }
@@ -1803,15 +1803,15 @@ public class FactureUI extends JFrame {
             
         } catch (Exception e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try { conn.rollback(); } catch (SQLException ex) { log.error("Erreur lors du rollback", ex); }
             }
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Erreur lors de la modification: " + e.getMessage(), 
+            log.error("Erreur lors de la modification de la facture", e);
+            JOptionPane.showMessageDialog(this, "Erreur lors de la modification: " + e.getMessage(),
                                           "Erreur", JOptionPane.ERROR_MESSAGE);
             return false;
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { log.error("Erreur fermeture connexion updateFactureExistante", e); }
             }
         }
     }

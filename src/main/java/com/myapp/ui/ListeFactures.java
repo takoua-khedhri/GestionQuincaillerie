@@ -804,9 +804,9 @@ public class ListeFactures extends JFrame {
             }
             this.dispose();
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Erreur lors de la modification: " + e.getMessage(), 
+            log.error("Error modifying document", e);
+            JOptionPane.showMessageDialog(this,
+                "Erreur lors de la modification: " + e.getMessage(),
                 "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -845,7 +845,7 @@ public class ListeFactures extends JFrame {
             int rowsAffected = pst.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error deleting document with cascade", e);
             return false;
         }
     }
@@ -859,7 +859,7 @@ public class ListeFactures extends JFrame {
                 return rs.next();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error checking if document exists", e);
             return false;
         }
     }
@@ -950,7 +950,7 @@ public class ListeFactures extends JFrame {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error displaying BL with print preview", e);
         }
     }
 
@@ -981,7 +981,7 @@ public class ListeFactures extends JFrame {
                 try {
                     Graphics2D g2d = (Graphics2D) g;
                     impression.print(g2d, new java.awt.print.PageFormat(), 0);
-                } catch(Exception e) { e.printStackTrace(); }
+                } catch(Exception e) { log.error("Error rendering BL preview", e); }
             }
         };
         pagePanel.setPreferredSize(new Dimension(800, 1000));
@@ -1084,7 +1084,7 @@ public class ListeFactures extends JFrame {
                 imp.imprimer();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error printing existing BL", e);
         }
     }
 
@@ -1158,7 +1158,7 @@ public class ListeFactures extends JFrame {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("Error displaying invoice with print preview", e);
         }
     }
 

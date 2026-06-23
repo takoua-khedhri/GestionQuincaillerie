@@ -1,6 +1,9 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.util.AppTheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.myapp.db.DatabaseManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -45,6 +48,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 public class HistoriqueEntreesUI extends JFrame {
+    private static final Logger log = LoggerFactory.getLogger(HistoriqueEntreesUI.class);
 
     private JTable tableEntrees;
     private DefaultTableModel model;
@@ -526,8 +530,7 @@ public class HistoriqueEntreesUI extends JFrame {
                             }
                         }
                     } catch (SQLException e) {
-                        System.err.println("Erreur SQL: " + e.getMessage());
-                        e.printStackTrace();
+                        log.error("Erreur SQL lors du chargement de l'historique", e);
                         throw e;
                     }
                     return null;
@@ -580,7 +583,7 @@ public class HistoriqueEntreesUI extends JFrame {
                         });
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Erreur lors du chargement de l'historique des entrées", e);
                         HistoriqueEntreesUI.this.lblStatut.setText("✗ Erreur lors du chargement de l'historique: " + e.getMessage());
                         HistoriqueEntreesUI.this.lblStatut.setForeground(new Color(231, 76, 60));
                         SwingUtilities.invokeLater(() -> {
@@ -697,10 +700,10 @@ public class HistoriqueEntreesUI extends JFrame {
                                 JOptionPane.INFORMATION_MESSAGE);
                                 
                         } catch (Exception e) {
-                            e.printStackTrace();
-                            JOptionPane.showMessageDialog(HistoriqueEntreesUI.this, 
-                                "❌ Erreur lors du vidage de l'historique:\n" + e.getMessage(), 
-                                "Erreur", 
+                            log.error("Erreur lors du vidage de l'historique des entrées", e);
+                            JOptionPane.showMessageDialog(HistoriqueEntreesUI.this,
+                                "Erreur lors du vidage de l'historique:\n" + e.getMessage(),
+                                "Erreur",
                                 JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -732,12 +735,12 @@ public class HistoriqueEntreesUI extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                AppTheme.init();
                 System.setProperty("awt.useSystemAAFontSettings", "on");
                 System.setProperty("swing.aatext", "true");
                 new HistoriqueEntreesUI();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Erreur lors du démarrage de l'application", e);
                 JOptionPane.showMessageDialog(null, "Erreur lors du démarrage de l'application: " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         });

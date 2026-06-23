@@ -1,6 +1,9 @@
 package com.myapp.ui;
 
 import com.myapp.db.ConnexionSQLite;
+import com.myapp.util.AppTheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.myapp.db.DatabaseManager;
 import java.awt.BorderLayout;
 import java.awt.Color;

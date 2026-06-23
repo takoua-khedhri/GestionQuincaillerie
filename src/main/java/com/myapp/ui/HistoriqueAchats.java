@@ -877,7 +877,7 @@ public class HistoriqueAchats extends JFrame {
                     rs.getString("telephone")
                 };
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la recuperation des infos fournisseur pour la facture {}", factureId, e); }
         return null;
     }
 
@@ -889,7 +889,7 @@ public class HistoriqueAchats extends JFrame {
             pst.setInt(1, factureId);
             ResultSet rs = pst.executeQuery();
             if (rs.next()) return rs.getString("numero_fournisseur");
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la recuperation du numero fournisseur pour la facture {}", factureId, e); }
         return null;
     }
 
@@ -919,7 +919,7 @@ public class HistoriqueAchats extends JFrame {
                     formatMontant(ttc)
                 });
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { log.error("Erreur lors de la recuperation des articles de la facture {}", factureId, e); }
         return rows.toArray(new Object[0][]);
     }
 

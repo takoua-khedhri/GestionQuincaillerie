@@ -892,8 +892,8 @@ public class FactureFournisseurUI extends JFrame {
             CalculTotauxAchat t = factureManager.calculerTotaux();
             double retPct = 0;
             try { retPct = Double.parseDouble(txtRetenueSource.getText().trim().replace(",", ".")); }
-            catch (Exception ignored) {}
-            
+            catch (Exception ex) { log.warn("Format de retenue invalide lors de l'impression, utilisation de 0%: {}", txtRetenueSource.getText()); }
+
             double retenu = 0;
             if (t.totalHT >= SEUIL_RETENUE_HT) {
                 retenu = t.totalHT * (retPct / 100.0);
@@ -1089,7 +1089,7 @@ public class FactureFournisseurUI extends JFrame {
             if (f.exists())
                 logoIcon = new ImageIcon(new ImageIcon(f.getAbsolutePath())
                     .getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH));
-        } catch (Exception ignored) {}
+        } catch (Exception ex) { log.warn("Impossible de charger le logo", ex); }
     }
 
     private void adjustComponentsForScreen() {
