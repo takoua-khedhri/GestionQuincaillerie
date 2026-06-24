@@ -3,11 +3,6 @@ package com.myapp.ui;
 import com.myapp.db.ConnexionSQLite;
 import com.myapp.db.GestionBackup;
 import com.myapp.print.StockImpression;
-import com.myapp.ui.components.DashboardStatsPanel;
-import com.myapp.ui.components.GlobalSearchBar;
-import com.myapp.ui.components.KeyboardShortcutManager;
-import com.myapp.ui.components.NotificationManager;
-import com.myapp.ui.components.StockAlertChecker;
 import com.myapp.util.AppTheme;
 import com.myapp.util.SessionManager;
 import com.myapp.util.UIUtils;
@@ -15,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
@@ -49,11 +43,6 @@ public class AdminDashboard extends JFrame {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER);
         this.add(this.createFooterPanel(), BorderLayout.SOUTH);
-
-        this.registerKeyboardShortcuts();
-        StockAlertChecker stockChecker = new StockAlertChecker();
-        stockChecker.checkAndNotify(this);
-        stockChecker.startPeriodicCheck(this, 15);
     }
 
     private String getRoleLabel() {
@@ -193,14 +182,6 @@ public class AdminDashboard extends JFrame {
         titlePanel.add(titleLabel, BorderLayout.NORTH);
         titlePanel.add(subTitleLabel, BorderLayout.CENTER);
 
-        GlobalSearchBar searchBar = new GlobalSearchBar();
-        searchBar.setPreferredSize(new Dimension(350, 36));
-
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        centerPanel.setBackground(Color.WHITE);
-        centerPanel.add(searchBar);
-        headerPanel.add(centerPanel, BorderLayout.CENTER);
-
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         userPanel.setBackground(Color.WHITE);
         String userName = SessionManager.getInstance().getCurrentUser();
@@ -237,17 +218,7 @@ public class AdminDashboard extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout(20, 20));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
         mainPanel.setBackground(AppTheme.LIGHT);
-        JPanel topSection = new JPanel(new BorderLayout(0, 20));
-        topSection.setBackground(AppTheme.LIGHT);
-        topSection.add(this.createStatsDashboard(), BorderLayout.NORTH);
-
-        if (isAdmin()) {
-            DashboardStatsPanel chartsPanel = new DashboardStatsPanel();
-            chartsPanel.setPreferredSize(new Dimension(100, 350));
-            topSection.add(chartsPanel, BorderLayout.CENTER);
-        }
-
-        mainPanel.add(topSection, BorderLayout.NORTH);
+        mainPanel.add(this.createStatsDashboard(), BorderLayout.NORTH);
 
         int cols = isAdmin() ? 4 : 3;
         int rows = isAdmin() ? 2 : 2;
@@ -502,27 +473,11 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    private void registerKeyboardShortcuts() {
-        KeyboardShortcutManager.registerDashboardShortcuts(this,
-                () -> handleCardButtonAction("Consulter Stock"),
-                () -> handleCardButtonAction("Facture"),
-                () -> handleCardButtonAction("Bon de Livraison"),
-                () -> handleCardButtonAction("Gestion clients"),
-                () -> handleCardButtonAction("Gestion fournisseurs"),
-                () -> handleCardButtonAction("Devis"),
-                () -> {}
-        );
-    }
-
     private JPanel createFooterPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         panel.add(new JLabel("Systeme de Facturation v3.0"), BorderLayout.WEST);
-        JLabel shortcuts = new JLabel("Ctrl+S Stock | Ctrl+F Facture | Ctrl+B BL | Ctrl+L Clients | Ctrl+D Devis");
-        shortcuts.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        shortcuts.setForeground(new Color(160, 160, 160));
-        panel.add(shortcuts, BorderLayout.EAST);
         return panel;
     }
 
