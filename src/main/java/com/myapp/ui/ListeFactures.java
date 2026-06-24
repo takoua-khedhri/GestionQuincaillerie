@@ -89,6 +89,8 @@ public class ListeFactures extends JFrame {
     // Boutons d'action bas de page
     private JButton btnVoirDetails;
     private JButton btnRafraichir;
+    private JButton btnAvoir;
+    private JButton btnPaiement;
     
     private final DecimalFormat df = new DecimalFormat("#,##0.00");
     private final Map<Integer, Integer> rowToFactureIdMap = new HashMap<>();
@@ -386,8 +388,12 @@ public class ListeFactures extends JFrame {
         
         this.btnVoirDetails = this.createStyledButton("\uf06e", "Voir Détails & Imprimer", new Color(52, 152, 219));
         this.btnRafraichir = this.createStyledButton("\uf021", "Rafraîchir", new Color(155, 89, 182));
+        this.btnAvoir = this.createStyledButton("\uf0e2", "Créer un Avoir", new Color(231, 76, 60));
+        this.btnPaiement = this.createStyledButton("\uf155", "Paiements", new Color(39, 174, 96));
         
         buttonPanel.add(this.btnVoirDetails);
+        buttonPanel.add(this.btnAvoir);
+        buttonPanel.add(this.btnPaiement);
         buttonPanel.add(this.btnRafraichir);
 
         this.add(navBarPanel, BorderLayout.NORTH);
@@ -407,6 +413,8 @@ public class ListeFactures extends JFrame {
         this.btnResetFiltres.addActionListener(e -> this.resetFiltres());
         this.btnRafraichir.addActionListener(e -> this.chargerFactures());
         this.btnVoirDetails.addActionListener(e -> this.voirDetailsFacture());
+        this.btnAvoir.addActionListener(e -> this.ouvrirAvoir());
+        this.btnPaiement.addActionListener(e -> this.ouvrirPaiement());
         
         this.txtRechercheNom.addKeyListener(new KeyAdapter() {
             @Override
@@ -1387,6 +1395,32 @@ public class ListeFactures extends JFrame {
         @Override
         public Object getCellEditorValue() {
             return "";
+        }
+    }
+
+    private void ouvrirAvoir() {
+        int row = tableFactures.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une facture.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int factureId = rowToFactureIdMap.getOrDefault(row, -1);
+        if (factureId > 0) {
+            new AvoirUI(factureId).setVisible(true);
+            this.chargerFactures();
+        }
+    }
+
+    private void ouvrirPaiement() {
+        int row = tableFactures.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une facture.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int factureId = rowToFactureIdMap.getOrDefault(row, -1);
+        if (factureId > 0) {
+            new PaiementUI(factureId).setVisible(true);
+            this.chargerFactures();
         }
     }
 

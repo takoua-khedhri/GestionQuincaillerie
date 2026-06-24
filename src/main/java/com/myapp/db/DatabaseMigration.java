@@ -38,6 +38,44 @@ public class DatabaseMigration {
                     "date_mouvement DATETIME DEFAULT CURRENT_TIMESTAMP, " +
                     "utilisateur TEXT)");
 
+            stmt.execute("CREATE TABLE IF NOT EXISTS Avoirs (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "numero TEXT NOT NULL, " +
+                    "facture_id INTEGER NOT NULL, " +
+                    "date_avoir TEXT NOT NULL, " +
+                    "client_nom TEXT NOT NULL, " +
+                    "motif TEXT, " +
+                    "montant_ht REAL DEFAULT 0, " +
+                    "tva REAL DEFAULT 0, " +
+                    "montant_ttc REAL DEFAULT 0, " +
+                    "statut TEXT DEFAULT 'ACTIF', " +
+                    "created_at TEXT DEFAULT CURRENT_TIMESTAMP, " +
+                    "FOREIGN KEY (facture_id) REFERENCES Factures(id))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS DetailsAvoir (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "avoir_id INTEGER NOT NULL, " +
+                    "article_designation TEXT NOT NULL, " +
+                    "quantite INTEGER NOT NULL, " +
+                    "prix_unitaire REAL NOT NULL, " +
+                    "montant REAL NOT NULL, " +
+                    "FOREIGN KEY (avoir_id) REFERENCES Avoirs(id))");
+
+            stmt.execute("CREATE TABLE IF NOT EXISTS Paiements (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "facture_id INTEGER NOT NULL, " +
+                    "type_document TEXT DEFAULT 'FACTURE', " +
+                    "date_paiement TEXT NOT NULL, " +
+                    "montant REAL NOT NULL, " +
+                    "mode_paiement TEXT, " +
+                    "reference TEXT, " +
+                    "notes TEXT, " +
+                    "created_at TEXT DEFAULT CURRENT_TIMESTAMP, " +
+                    "FOREIGN KEY (facture_id) REFERENCES Factures(id))");
+
+            addColumnIfNotExists(stmt, "Factures", "statut_paiement", "TEXT DEFAULT 'NON_PAYE'");
+            addColumnIfNotExists(stmt, "Factures", "montant_paye", "REAL DEFAULT 0");
+
             log.info("Migration de la base de donnees terminee");
         } catch (SQLException e) {
             log.error("Erreur migration base de donnees", e);
